@@ -1,6 +1,6 @@
 # Shell の生成（Policy & Discretion）
 
-仕様モデル（Core）から派生する Shell（API、永続、UI、メッセージング）をエージェントに生成させる規約です。書籍8.6.3 の Policy & Discretion に従います。
+仕様モデル（Core）から派生する Shell（API、永続、UI、メッセージング）をエージェントに生成させる規約です。Policy & Discretion の流儀に従います。
 
 ## 原則：偶有的複雑さには裁量を残し方針を与える
 
@@ -39,7 +39,7 @@ REST API のエンドポイントを実装してください。
 
 ## Phase 2: Shell の実装
 
-書籍8.3.2 の Phase 2 として、Phase 1 で生成した Core を取り囲む Shell を実装します。
+Core/Shell 二段階生成の Phase 2 として、Phase 1 で生成した Core を取り囲む Shell を実装します。
 
 ### Shell の役割
 
@@ -147,4 +147,4 @@ Shell の生成でも、次は Strict として渡します。
 
 ## 参照
 
-- 書籍8.3.2節（Core/Shell の二段階生成）、8.6.3節（Policy & Discretion）、6章（仕様モデルから実装モデルへ）
+- Martin Fowler *Patterns of Enterprise Application Architecture*（実装モデルのパターン）

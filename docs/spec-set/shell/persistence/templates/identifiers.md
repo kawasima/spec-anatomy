@@ -49,7 +49,7 @@ last-reviewed: YYYY-MM-DD
 
 ## マイグレーションでの採番
 
-データ移行時の ID 体系の整合性に注意します。書籍8.7.2 の Expand and Contract で段階的に移行します。
+データ移行時の ID 体系の整合性に注意します。Expand and Contract で段階的に移行します。
 
 ## 実装への対応
 

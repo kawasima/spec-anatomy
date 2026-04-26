@@ -1,6 +1,6 @@
 # 出張申請サンプル
 
-出張申請システムの完全な Spec Set サンプルです。書籍7.1節の初期モデルと8.5.7節の最終形を題材にしています。
+出張申請システムの完全な Spec Set サンプルです。初期モデルと、洗練後の最終形の2段階で示します。
 
 ## このサンプルが扱う業務
 
@@ -13,9 +13,9 @@
 
 ## 構成
 
-- [spec-model/](spec-model/) — Core の仕様モデル（書籍7.1節と8.5.7節の最終形）
-  - [business-trip.md](spec-model/business-trip.md) — 出張申請の data と behavior（最終形）
-  - [business-trip-initial.md](spec-model/business-trip-initial.md) — 書籍7.1節の初期モデル（拡張前との比較用）
+- [spec-model/](spec-model/) — Core の仕様モデル（最終形と初期モデル）
+  - [business-trip.md](spec-model/business-trip.md) — 出張申請の data と behavior（洗練後の最終形）
+  - [business-trip-initial.md](spec-model/business-trip-initial.md) — 初期モデル（洗練前との比較用）
 - [shell/](shell/) — Shell の例（API、永続、UI の最小例）
   - [api/](shell/api/) — REST API の例
   - [persistence/](shell/persistence/) — 永続モデルの例
@@ -27,16 +27,17 @@
 ## 使い方
 
 1. [spec-model/business-trip.md](spec-model/business-trip.md) を読み、最終形の仕様モデルがどう書かれているかを確認します
-2. [spec-model/business-trip-initial.md](spec-model/business-trip-initial.md) と比較し、書籍3章・4章の洗練でどう変わったかを確認します
+2. [spec-model/business-trip-initial.md](spec-model/business-trip-initial.md) と比較し、SMDD の洗練（凝集度・結合度・全域性・イミュータブルデータモデル）でどう変わったかを確認します
 3. [shell/](shell/) を読み、Core から Shell（API・永続・UI）への変換が「派生元参照」を必須化していることを確認します
 4. [ai-collaboration/](ai-collaboration/) のサンプルプロンプトを実プロジェクトの参考にします
 
-## 書籍との対応
+## このサンプルが扱う SMDD の観点
 
-- 1章: 出張申請の業務ルール
-- 2章: 仕様DSL の書き方
-- 3.5節: 段階的改善の6イテレーション
-- 4章: イミュータブルデータモデル（このサンプルでは最終形に直接適用）
-- 7.1節: 初期モデル（business-trip-initial.md）
-- 7.2節・7.3節: 仕様変更（費目別の拡張、精算手段の拡張）── このサンプルでは省略
-- 8.5.7節: 最終形（business-trip.md）
+- 仕様DSL（data + behavior）の書き方
+- 段階的改善（凝集度・結合度・全域性・スタンプ結合排除）
+- 状態を OR で分ける（仕様隠しの回避）
+- イミュータブルデータモデル（リソース／イベント分類）
+- Core/Shell の二段階生成（Core サンプル + Shell の API・永続・UI 例）
+- AI Collaboration（refactoring 用と code generation 用のプロンプト）
+
+仕様変更への対処（費目別の拡張、精算手段の拡張）は本サンプルでは省略します。

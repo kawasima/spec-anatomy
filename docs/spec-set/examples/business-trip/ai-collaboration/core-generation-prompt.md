@@ -7,12 +7,12 @@ last-reviewed: 2026-04-25
 
 # Core からコード生成するサンプルプロンプト
 
-書籍8.6.1 の Strict Spec に従って、Core の仕様モデルからエージェントに TypeScript コードを生成させる例です。
+Strict Spec の流儀に従って、Core の仕様モデルからエージェントに TypeScript コードを生成させる例です。
 
 ## Phase 1: Core の実装
 
 ```text
-書籍 *Specification Model-Driven Design* 8.3.2節の Phase 1 として、
+Core/Shell 二段階生成の Phase 1 として、
 次の仕様モデルを TypeScript で実装してください。
 
 ## 仕様モデル
@@ -69,7 +69,7 @@ Why コメントも含める]
 Phase 1 で生成した Core を呼び出す Shell を生成させます。
 
 ```text
-書籍8.3.2節の Phase 2 として、Phase 1 で生成した Core の TypeScript 実装を使って、
+Core/Shell 二段階生成の Phase 2 として、Phase 1 で生成した Core の TypeScript 実装を使って、
 REST API を実装してください。
 
 ## Phase 1 の Core
@@ -110,11 +110,11 @@ REST API を実装してください。
 
 ## Phase 3: 検証ループ
 
-書籍5章の3軸（構造・変換・時系列）のテストを生成させます。
+仕様テストの3軸（構造・変換・時系列）のテストを生成させます。
 
 ```text
 [../spec-model/business-trip.md] の仕様モデルから、
-書籍5章の規約に従ったテストを TypeScript で生成してください。
+仕様テストの規約に従ったテストを TypeScript で生成してください。
 
 ## 必要なテスト
 
@@ -223,11 +223,11 @@ export function 事前承認が必要か判断する(
 // ... 省略
 ```
 
-事前承認要件が条件式の羅列ではなく型として表現され、Why コメントが各分岐に残されています。書籍8.6.2 の通り、Why をプロンプトに含めた効果が出ています。
+事前承認要件が条件式の羅列ではなく型として表現され、Why コメントが各分岐に残されています。Why をプロンプトに含めた効果が出ています。
 
 ## 参照
 
 - [../../../ai-collaboration/core-generation.md](../../../ai-collaboration/core-generation.md)
 - [../../../ai-collaboration/shell-generation.md](../../../ai-collaboration/shell-generation.md)
 - [../../../ai-collaboration/verification-loop.md](../../../ai-collaboration/verification-loop.md)
-- 書籍 8.3.2節（Core/Shell の二段階生成）、8.6節（Strict Spec / Policy & Discretion）
+- Scott Wlaschin *Domain Modeling Made Functional*
