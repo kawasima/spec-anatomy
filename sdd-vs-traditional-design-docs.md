@@ -1,4 +1,4 @@
-# Traditional SI設計書 と 仕様駆動開発の比較分析
+# Traditional SIer設計書 と 仕様駆動開発の仕様の比較分析
 
 このリポジトリの目的は、Traditional SIerの設計ドキュメントをAI Readableにし、足りないものを足して、SIer向けの仕様駆動開発のSpec Setを作ることである。本文書はその第一段階として、`sdd.md` が想定する仕様駆動開発（Spec-Driven Development／Living Documentation）の世界観と、Traditional SIerの伝統的設計書を突き合わせ、現状を分析する。
 
