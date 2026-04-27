@@ -44,4 +44,4 @@ API のリクエストとレスポンスの型は、Core の `data` から派生
 ## 参照
 
 - [../README.md](../README.md): API 変換規約
-- [../../../examples/business-trip/shell/api/business-trip-api.md](../../../examples/business-trip/shell/api/business-trip-api.md): API テンプレートを使ったサンプル
+- [../../../../examples/business-trip/shell/api/business-trip-api.md](../../../../examples/business-trip/shell/api/business-trip-api.md): API テンプレートを使ったサンプル

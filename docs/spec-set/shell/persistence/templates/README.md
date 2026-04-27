@@ -79,4 +79,4 @@ CREATE TABLE order_events (
 ## 参照
 
 - [../README.md](../README.md): 永続変換規約
-- [../../../examples/business-trip/shell/persistence/business-trip-table.md](../../../examples/business-trip/shell/persistence/business-trip-table.md): テンプレートを使ったサンプル
+- [../../../../examples/business-trip/shell/persistence/business-trip-table.md](../../../../examples/business-trip/shell/persistence/business-trip-table.md): テンプレートを使ったサンプル

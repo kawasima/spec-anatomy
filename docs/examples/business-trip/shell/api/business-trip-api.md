@@ -107,7 +107,7 @@ api-spec/components/schemas に Core の data から派生したスキーマ
 
 ## 契約テスト
 
-[../../../../spec-tests/totality/](../../../../spec-tests/totality/) の規約に従い、各エンドポイントの全域性をテストします。
+[../../../../spec-set/spec-tests/totality/](../../../../spec-set/spec-tests/totality/) の規約に従い、各エンドポイントの全域性をテストします。
 
 - 正常系: 事前承認必要な申請で、承認者が上長 → 事前承認OK が返る
 - 拒否系: 事前承認必要な申請で、承認者が上長、却下理由あり → 事前承認NG が返る

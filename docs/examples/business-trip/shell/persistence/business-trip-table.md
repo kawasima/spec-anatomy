@@ -132,4 +132,4 @@ behavior BusinessTripRepository.save = 出張申請 -> 保存完了
 
 ## 関連 ADR
 
-このサンプルでは Data Mapper パターンを採用していますが、Active Record / Repository / CQRS のいずれを採るかは ADR で記録します（[../../../../adrs/README.md](../../../../adrs/README.md) 参照）。
+このサンプルでは Data Mapper パターンを採用していますが、Active Record / Repository / CQRS のいずれを採るかは ADR で記録します（[../../../../spec-set/adrs/README.md](../../../../spec-set/adrs/README.md) 参照）。

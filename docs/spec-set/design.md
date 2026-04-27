@@ -82,5 +82,5 @@ SMDD のインサイドアウト開発はゼロから Core を書き始める前
 
 - `spec-model/` の中身を生成AIに渡したとき、Strict Spec として実装コード生成の入力に使えるか
 - 生成された実装が、`spec-tests/` の規約に従ったテスト（property-based test、状態遷移の網羅、契約テスト）で検証可能か
-- `examples/business-trip/` の仕様モデルが、6条件を満たしているか
+- `../examples/business-trip/` の仕様モデルが、6条件を満たしているか
 - 任意の仕様モデルファイルが、6条件を満たしているか
