@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>oppsett — 画面設計書レイアウト支援</title>
+  <link rel="stylesheet" href="src/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="toolbar">
+      <h1>oppsett</h1>
+      <button id="btn-load-html">デザインHTMLを読み込む</button>
+      <input type="file" id="file-html" accept=".html,.htm,text/html" hidden />
+      <button id="btn-save-project">プロジェクト保存</button>
+      <button id="btn-load-project">プロジェクト読み込み</button>
+      <input type="file" id="file-project" accept=".json,application/json" hidden />
+      <button id="btn-load-screen-md">screen.md 読込</button>
+      <input type="file" id="file-screen-md" accept=".md,text/markdown" hidden />
+      <button id="btn-export-screen-md">screen.md 書出</button>
+      <button id="btn-export-overlay">オーバーレイHTML出力</button>
+      <button id="btn-export-overlay-png">レイアウトPNG出力</button>
+      <button id="btn-save-to-repo" class="primary" hidden>保存（リポジトリへ）</button>
+      <button id="btn-reset">リセット</button>
+      <span class="spacer"></span>
+      <span class="help">マウスホバーで仮選択 / ↑↓←→で親子兄弟移動 / Enter or クリックで確定 / Escで解除</span>
+    </div>
+
+    <div class="canvas">
+      <div id="drop-zone">
+        <iframe id="design-frame" sandbox="allow-same-origin allow-scripts" srcdoc="<!doctype html><html><body style='font-family:sans-serif;color:#9ca3af;padding:40px;text-align:center'>デザインHTMLをドラッグ&ドロップするか、ツールバーの「デザインHTMLを読み込む」ボタンから選択してください</body></html>"></iframe>
+        <div id="overlay-layer"></div>
+      </div>
+    </div>
+
+    <div class="sidepanel">
+      <div class="panel-section panel-groups">
+        <div class="panel-title">画面項目グループ</div>
+        <div id="group-list"></div>
+      </div>
+      <div class="panel-section panel-items">
+        <div class="panel-title">項目一覧（選択中グループ）</div>
+        <div id="item-list"></div>
+      </div>
+      <div class="panel-section panel-form">
+        <div class="panel-title">項目詳細</div>
+        <div id="item-form"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="vendor/html2canvas.min.js"></script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

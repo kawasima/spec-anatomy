@@ -1,0 +1,390 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", sans-serif;
+  font-size: 13px;
+  color: #1f2937;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  grid-template-rows: 48px 1fr;
+  grid-template-areas:
+    "toolbar toolbar"
+    "canvas sidepanel";
+  height: 100vh;
+}
+
+.toolbar {
+  grid-area: toolbar;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: #f3f4f6;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.toolbar h1 {
+  font-size: 14px;
+  margin: 0 16px 0 0;
+  font-weight: 600;
+}
+
+.toolbar button {
+  padding: 5px 10px;
+  font-size: 12px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.toolbar button:hover {
+  background: #f9fafb;
+}
+
+.toolbar button.primary {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+  font-weight: 600;
+}
+.toolbar button.primary:hover {
+  background: #1d4ed8;
+}
+.toolbar button.primary:disabled {
+  background: #93c5fd;
+  border-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+.toolbar .spacer { flex: 1; }
+
+.toolbar .help {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.canvas {
+  grid-area: canvas;
+  position: relative;
+  overflow: auto;
+  background: #fff;
+  border-right: 1px solid #d1d5db;
+}
+
+#drop-zone {
+  position: relative;
+  min-height: 100%;
+}
+
+#drop-zone.drag-over {
+  outline: 3px dashed #2563eb;
+  outline-offset: -8px;
+}
+
+#design-frame {
+  width: 100%;
+  min-height: 600px;
+  border: none;
+  display: block;
+  background: #fff;
+}
+
+#overlay-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+#overlay-layer .overlay-badge {
+  pointer-events: auto;
+}
+#overlay-layer .overlay-rect,
+#overlay-layer .overlay-tentative {
+  pointer-events: none;
+}
+
+.overlay-rect {
+  position: absolute;
+  border: 2px solid #e11d48;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.overlay-rect.selected {
+  border-color: #be123c;
+  box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.25);
+}
+
+.overlay-badge {
+  position: absolute;
+  background: #e11d48;
+  color: #fff;
+  font: bold 11px/1 sans-serif;
+  padding: 3px 6px;
+  border-radius: 10px;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+
+.overlay-badge.selected {
+  background: #be123c;
+}
+
+.overlay-tentative {
+  position: absolute;
+  border: 2px dashed #2563eb;
+  box-sizing: border-box;
+  background: rgba(37, 99, 235, 0.08);
+  pointer-events: none;
+}
+
+.sidepanel {
+  grid-area: sidepanel;
+  display: grid;
+  grid-template-rows: minmax(120px, auto) 1fr 1fr;
+  background: #f9fafb;
+  overflow: hidden;
+}
+
+.panel-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.panel-title {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #e5e7eb;
+  color: #374151;
+}
+
+#item-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.list-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 80px 24px;
+  align-items: center;
+  padding: 4px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  gap: 6px;
+}
+
+.list-row:hover {
+  background: #f3f4f6;
+}
+
+.list-row.selected {
+  background: #dbeafe;
+}
+
+.list-row.drag-over {
+  border-top: 2px solid #2563eb;
+}
+
+.cell-no {
+  font-weight: 600;
+  color: #e11d48;
+}
+
+.cell-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell-kind {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.cell-del {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.cell-del:hover {
+  color: #e11d48;
+}
+
+#item-form {
+  overflow-y: auto;
+  padding: 10px;
+  flex: 1;
+}
+
+.form-empty {
+  color: #9ca3af;
+  font-size: 12px;
+  text-align: center;
+  padding: 16px;
+}
+
+.form-header {
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #e11d48;
+}
+
+.form-field {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  align-items: start;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.form-label {
+  font-size: 11px;
+  color: #6b7280;
+  padding-top: 4px;
+}
+
+.form-input {
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  font-family: inherit;
+  background: #fff;
+}
+
+textarea.form-input {
+  resize: vertical;
+}
+
+input[type="checkbox"].form-input {
+  justify-self: start;
+  width: auto;
+}
+
+/* グループ一覧 */
+#group-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px 6px;
+}
+
+.group-row {
+  display: grid;
+  grid-template-columns: 1fr 38px 24px;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-bottom: 2px;
+}
+
+.group-row:hover {
+  background: #f3f4f6;
+}
+
+.group-row.selected {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.group-row.drag-over {
+  border-top: 2px solid #2563eb;
+}
+
+.group-name-input {
+  font-size: 12px;
+  padding: 3px 5px;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  background: #fff;
+  font-family: inherit;
+  width: 100%;
+}
+
+.group-count {
+  font-size: 11px;
+  color: #6b7280;
+  text-align: right;
+}
+
+.group-del {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.group-del:hover {
+  color: #e11d48;
+}
+
+.group-add {
+  display: block;
+  width: calc(100% - 12px);
+  margin: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  background: #fff;
+  border: 1px dashed #9ca3af;
+  border-radius: 3px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.group-add:hover {
+  background: #f9fafb;
+  border-color: #6b7280;
+  color: #1f2937;
+}
+
+.list-empty {
+  text-align: center;
+  padding: 12px;
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.list-section-header {
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-bottom: 1px solid #fcd34d;
+}
+
+.list-row.unplaced {
+  background: #fffbeb;
+}
+
+.list-row.unplaced .cell-no {
+  color: #d97706;
+}
+
+select.form-input {
+  width: 100%;
+}

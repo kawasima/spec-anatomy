@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>出張申請詳細(事前承認) — スマホ版</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: #f3f4f6;
+    margin: 0 auto;
+    padding: 0;
+    color: #111827;
+    width: 375px;
+    position: relative;
+    min-height: 800px;
+    padding-bottom: 90px;
+  }
+  .screen-title {
+    background: #1f2937;
+    color: #fff;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+  }
+  .section {
+    background: #fff;
+    margin: 12px;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+  .section-heading {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    margin: 0 0 10px;
+  }
+  .info-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .info-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+    border-bottom: 1px dashed #e5e7eb;
+  }
+  .info-list li:last-child { border-bottom: none; }
+  .info-list .label-text {
+    color: #6b7280;
+    font-size: 13px;
+  }
+  .info-list .value-text {
+    color: #111827;
+    font-weight: 500;
+  }
+
+  /* 事前承認要件 */
+  .requirements {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .requirements li {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    background: #fffbeb;
+    font-size: 13px;
+  }
+  .requirements .check {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    background: #f59e0b;
+    color: #fff;
+    text-align: center;
+    line-height: 14px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  /* 予定費用明細(折りたたみ) */
+  .accordion {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    background: #fff;
+  }
+  .accordion-header {
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+  .accordion-header .total {
+    font-variant-numeric: tabular-nums;
+    color: #111827;
+  }
+  .cost-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+    font-size: 13px;
+  }
+  .cost-card .key {
+    color: #6b7280;
+    font-size: 11px;
+  }
+
+  /* 操作領域(画面下部固定) */
+  .actions-fixed {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 375px;
+    padding: 12px 16px;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    gap: 8px;
+  }
+  .btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary { background: #2563eb; color: #fff; }
+  .btn-danger { background: #dc2626; color: #fff; }
+</style>
+</head>
+<body>
+  <div class="screen-title">出張申請詳細</div>
+
+  <!-- ヘッダ領域(スマホ) -->
+  <section class="section" data-group="ヘッダ領域(スマホ)">
+    <h2 class="section-heading">申請情報</h2>
+    <ul class="info-list">
+      <li>
+        <span class="label-text">申請ID</span>
+        <span class="value-text" data-item="申請ID">BT-20260420-0142</span>
+      </li>
+      <li>
+        <span class="label-text">出張目的</span>
+        <span class="value-text" data-item="出張目的">大阪支社での新サービス企画...</span>
+      </li>
+      <li>
+        <span class="label-text">予定費用合計</span>
+        <span class="value-text" data-item="予定費用合計">125,000 円</span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 事前承認要件領域(スマホ) -->
+  <section class="section" data-group="事前承認要件領域(スマホ)">
+    <h2 class="section-heading">事前承認が必要な理由</h2>
+    <ul class="requirements">
+      <li>
+        <span class="check">✓</span>
+        <span>高額出張(予定費用合計が10万円以上)</span>
+      </li>
+      <li>
+        <span class="check">✓</span>
+        <span>役職なし申請(申請者の役職が「役職なし」)</span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 予定費用明細領域(スマホ) - 折りたたみ -->
+  <section class="section" data-group="予定費用明細領域(スマホ)">
+    <h2 class="section-heading">予定費用明細</h2>
+    <div class="accordion">
+      <div class="accordion-header">
+        <span>明細を表示 (5件)</span>
+        <span class="total">125,000 円</span>
+      </div>
+      <div style="padding: 8px;">
+        <div class="cost-card">
+          <span><span class="key">日付</span><br>05/12</span>
+          <span><span class="key">費目</span><br>交通費</span>
+          <span style="text-align: right;"><span class="key">金額</span><br>28,000 円</span>
+        </div>
+        <div class="cost-card">
+          <span><span class="key">日付</span><br>05/12</span>
+          <span><span class="key">費目</span><br>宿泊費</span>
+          <span style="text-align: right;"><span class="key">金額</span><br>22,000 円</span>
+        </div>
+        <div class="cost-card">
+          <span><span class="key">日付</span><br>05/13</span>
+          <span><span class="key">費目</span><br>交際費</span>
+          <span style="text-align: right;"><span class="key">金額</span><br>15,000 円</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 操作領域(スマホ) - 画面下部固定 -->
+  <div class="actions-fixed" data-group="操作領域(スマホ)">
+    <button class="btn btn-danger" data-item="却下ボタン">却下</button>
+    <button class="btn btn-primary" data-item="承認ボタン">承認</button>
+  </div>
+</body>
+</html>

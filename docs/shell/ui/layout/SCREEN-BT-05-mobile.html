@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>出張申請最終承認 — スマホ版</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: #f3f4f6;
+    margin: 0 auto;
+    padding: 0;
+    color: #111827;
+    width: 375px;
+    position: relative;
+    min-height: 800px;
+    padding-bottom: 90px;
+  }
+  .screen-title {
+    background: #1f2937;
+    color: #fff;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+  }
+  .section {
+    background: #fff;
+    margin: 12px;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+  .section-heading {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    margin: 0 0 10px;
+  }
+
+  .info-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .info-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+    border-bottom: 1px dashed #e5e7eb;
+  }
+  .info-list li:last-child { border-bottom: none; }
+  .info-list .label-text {
+    color: #6b7280;
+    font-size: 13px;
+  }
+  .info-list .value-text {
+    color: #111827;
+    font-weight: 500;
+  }
+
+  /* 費用比較(横スクロール) */
+  .scroll-x {
+    overflow-x: auto;
+  }
+  table.compare {
+    width: 100%;
+    min-width: 480px;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.compare th,
+  table.compare td {
+    border: 1px solid #e5e7eb;
+    padding: 6px 8px;
+    white-space: nowrap;
+  }
+  table.compare th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+    font-size: 12px;
+  }
+  table.compare td.amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  table.compare td.amount.over { color: #dc2626; font-weight: 600; }
+  table.compare td.amount.diff-plus { color: #dc2626; }
+  table.compare td.amount.diff-minus { color: #059669; }
+  table.compare tfoot td {
+    background: #f9fafb;
+    font-weight: 600;
+  }
+
+  /* 操作領域 */
+  .actions-fixed {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 375px;
+    padding: 12px 16px;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    gap: 8px;
+  }
+  .btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary { background: #2563eb; color: #fff; }
+  .btn-secondary { background: #e5e7eb; color: #374151; }
+</style>
+</head>
+<body>
+  <div class="screen-title">出張申請最終承認</div>
+
+  <!-- 申請情報(参照)領域(スマホ) -->
+  <section class="section" data-group="申請情報(参照)領域(スマホ)">
+    <h2 class="section-heading">申請情報</h2>
+    <ul class="info-list">
+      <li>
+        <span class="label-text">出張目的</span>
+        <span class="value-text" data-item="出張目的">福岡顧客訪問</span>
+      </li>
+      <li>
+        <span class="label-text">出張期間</span>
+        <span class="value-text" data-item="出張期間">04/25 〜 04/26</span>
+      </li>
+      <li>
+        <span class="label-text">実績費用合計</span>
+        <span class="value-text" data-item="実績費用合計">68,000 円</span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 費用比較領域(スマホ) -->
+  <section class="section" data-group="費用比較領域(スマホ)">
+    <h2 class="section-heading">予定費用と実績費用の比較</h2>
+    <div class="scroll-x">
+      <table class="compare">
+        <thead>
+          <tr>
+            <th>費目</th>
+            <th>予定金額</th>
+            <th>実績金額</th>
+            <th>差額</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>交通費</td>
+            <td class="amount">28,000</td>
+            <td class="amount over">29,500</td>
+            <td class="amount diff-plus">+1,500</td>
+          </tr>
+          <tr>
+            <td>宿泊費</td>
+            <td class="amount">22,000</td>
+            <td class="amount">20,000</td>
+            <td class="amount diff-minus">-2,000</td>
+          </tr>
+          <tr>
+            <td>交通費</td>
+            <td class="amount">18,000</td>
+            <td class="amount over">18,500</td>
+            <td class="amount diff-plus">+500</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>合計</td>
+            <td class="amount">68,000</td>
+            <td class="amount">68,000</td>
+            <td class="amount">0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <!-- 操作領域(スマホ) -->
+  <div class="actions-fixed" data-group="操作領域(スマホ)">
+    <button class="btn btn-secondary" data-item="戻るボタン">戻る</button>
+    <button class="btn btn-primary" data-item="最終承認ボタン">最終承認</button>
+  </div>
+</body>
+</html>

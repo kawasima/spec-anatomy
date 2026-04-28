@@ -1,0 +1,16 @@
+{
+  "name": "spec-anatomy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SIer向けの仕様駆動開発のSpec Setと支援ツール",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "marked": "^14.1.0",
+    "vite": "^5.4.0"
+  }
+}

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>出張申請一覧 — PC版</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: #f3f4f6;
+    margin: 0;
+    padding: 24px;
+    color: #111827;
+  }
+  .screen {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .screen-title {
+    background: #1f2937;
+    color: #fff;
+    padding: 14px 20px;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .section {
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .section:last-child { border-bottom: none; }
+
+  /* 検索・フィルタ領域 */
+  .filter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    color: #6b7280;
+  }
+  .field label {
+    margin-bottom: 4px;
+  }
+  .field select,
+  .field input {
+    padding: 6px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  /* 一覧領域 */
+  table.trips {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  table.trips th,
+  table.trips td {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 10px 12px;
+    text-align: left;
+  }
+  table.trips th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+    font-size: 13px;
+  }
+  table.trips td.amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  table.trips a.row-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  table.trips a.row-link:hover {
+    text-decoration: underline;
+  }
+  .status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-draft { background: #e5e7eb; color: #374151; }
+  .status-submitted { background: #dbeafe; color: #1e40af; }
+  .status-pre-required { background: #fef3c7; color: #92400e; }
+  .status-pre-approved { background: #d1fae5; color: #065f46; }
+
+  /* ページング */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px;
+    font-size: 14px;
+  }
+  .pagination button {
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .pagination .current {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+  }
+
+  /* 操作領域 */
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: #2563eb;
+    color: #fff;
+  }
+  .btn-secondary {
+    background: #e5e7eb;
+    color: #374151;
+  }
+</style>
+</head>
+<body>
+  <div class="screen">
+    <div class="screen-title">
+      <span>出張申請一覧</span>
+      <button class="btn btn-primary" data-item="新規申請ボタン">新規申請</button>
+    </div>
+
+    <!-- 検索・フィルタ領域 -->
+    <section class="section" data-group="検索・フィルタ領域">
+      <div class="filter-grid">
+        <div class="field">
+          <label data-item="状態フィルタ">状態</label>
+          <select>
+            <option>全状態</option>
+            <option>ドラフト</option>
+            <option>申請済み</option>
+            <option>事前承認必要</option>
+            <option>事前承認OK</option>
+            <option>事前承認NG</option>
+            <option>出張実績あり</option>
+            <option>最終承認済み</option>
+          </select>
+        </div>
+        <div class="field">
+          <label data-item="申請者フィルタ">申請者</label>
+          <input type="text" placeholder="氏名で検索">
+        </div>
+        <div class="field">
+          <label data-item="申請期間(開始)">申請期間(開始)</label>
+          <input type="text" placeholder="2026/01/01">
+        </div>
+        <div class="field">
+          <label data-item="申請期間(終了)">申請期間(終了)</label>
+          <input type="text" placeholder="2026/12/31">
+        </div>
+        <button class="btn btn-secondary" data-item="検索ボタン">検索</button>
+      </div>
+    </section>
+
+    <!-- 申請一覧領域 -->
+    <section class="section" data-group="申請一覧領域" style="padding: 0;">
+      <table class="trips">
+        <thead>
+          <tr>
+            <th data-item="申請ID">申請ID</th>
+            <th data-item="申請者">申請者</th>
+            <th data-item="出張目的">出張目的</th>
+            <th data-item="出張期間">出張期間</th>
+            <th data-item="予定費用合計">予定費用合計</th>
+            <th data-item="状態">状態</th>
+            <th data-item="申請日時">申請日時</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a class="row-link" href="#">BT-2026-0142</a></td>
+            <td>山田 太郎</td>
+            <td>大阪支社での新サービス企画会議</td>
+            <td>2026/05/12 〜 2026/05/14</td>
+            <td class="amount">125,000 円</td>
+            <td><span class="status-badge status-pre-required">事前承認必要</span></td>
+            <td>2026/04/20</td>
+          </tr>
+          <tr>
+            <td><a class="row-link" href="#">BT-2026-0141</a></td>
+            <td>山田 太郎</td>
+            <td>福岡顧客訪問</td>
+            <td>2026/04/25 〜 2026/04/26</td>
+            <td class="amount">68,000 円</td>
+            <td><span class="status-badge status-pre-approved">事前承認OK</span></td>
+            <td>2026/04/15</td>
+          </tr>
+          <tr>
+            <td><a class="row-link" href="#">BT-2026-0140</a></td>
+            <td>山田 太郎</td>
+            <td>東京本社研修</td>
+            <td>2026/05/01 〜 2026/05/02</td>
+            <td class="amount">42,000 円</td>
+            <td><span class="status-badge status-submitted">申請済み</span></td>
+            <td>2026/04/12</td>
+          </tr>
+          <tr>
+            <td><a class="row-link" href="#">BT-2026-0139</a></td>
+            <td>山田 太郎</td>
+            <td>(下書き)</td>
+            <td>未入力</td>
+            <td class="amount">−</td>
+            <td><span class="status-badge status-draft">ドラフト</span></td>
+            <td>−</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <button>«</button>
+        <button class="current">1</button>
+        <button>2</button>
+        <button>3</button>
+        <button>»</button>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
