@@ -1,233 +1,153 @@
 ---
-name: Core からコード生成するサンプルプロンプト
-description: 仕様モデル（Core）を Strict Spec として TypeScript に変換する例
+name: Core 生成プロンプト（出張申請）
+description: 出張申請の仕様モデル（Core）から TypeScript 実装を生成する Strict Spec プロンプト
 status: approved
-last-reviewed: 2026-04-25
+last-reviewed: 2026-04-28
 ---
 
-# Core からコード生成するサンプルプロンプト
+# Core 生成プロンプト（出張申請）
 
-Strict Spec の流儀に従って、Core の仕様モデルからエージェントに TypeScript コードを生成させる例です。
+[../spec-model/business-trip.md](../spec-model/business-trip.md) の仕様モデルからエージェントに **Core の TypeScript 実装** を生成させる完成形プロンプトです。Strict Spec の流儀に従い、本質的複雑さを曖昧さゼロで渡します。
 
-## Phase 1: Core の実装
+規約は [../../reference/spec-set/ai-collaboration/core-generation.md](../../reference/spec-set/ai-collaboration/core-generation.md) を参照。
 
-```text
-Core/Shell 二段階生成の Phase 1 として、
-次の仕様モデルを TypeScript で実装してください。
+## このプロンプトを使う場面
+
+- ゼロから Core 実装を生成したい
+- 仕様モデルを refactoring したので Core を再生成したい
+- 既存の Core 実装を別言語に置き換えたい（プロンプト末尾の言語指定を変える）
+
+## プロンプト本体
+
+````text
+あなたは仕様モデル駆動設計（SMDD）に従う Core の実装エージェントです。
+次の仕様モデルから TypeScript の Core 実装を生成してください。
 
 ## 仕様モデル
 
-[../spec-model/business-trip.md の data と behavior をすべて貼り付け、
-Why コメントも含める]
+[ここに docs/spec-model/business-trip.md の内容を全文貼り付け]
+
+例:
+
+```text
+data 社員 = 社員番号 AND 氏名 AND 役職
+data 役職 = 管理職 OR 一般社員
+data 出張申請 = 出張申請ドラフト OR 申請済み出張申請
+data 申請済み出張申請 = 出張予定 AND 申請者 AND 申請日時
+data 事前承認必要な出張申請 = 申請済み出張申請 AND 事前承認要件
+data 事前承認要件 = 高額出張 OR 役職なし申請 OR 先方負担申請
+
+behavior 事前承認が必要か判断する =
+  申請済み出張申請 -> 事前承認必要な出張申請 OR 事前承認不要な出張申請
+// 判定ロジック:
+// - 出張予定費用合計 >= 100,000 円 → 高額出張
+//   Why: 高額支出は組織として事前に妥当性を確認する必要がある
+// ...
+```
 
 ## 制約（Strict Spec）
 
 - 標準ライブラリのみ使用
-- フレームワーク（Express、NestJS等）・データベースアクセス・UIライブラリは
-  一切使わない
-- 外部依存（API呼び出し、DB アクセス、メール送信）は引数として注入する形にする
+- フレームワーク（Express、NestJS等）・データベースアクセス・UI ライブラリは一切使わない
+- 外部依存（API 呼び出し、DB アクセス、メール送信）は引数として注入する形にする
 - 副作用を持つ関数は明示的にマークする
+- 例外を投げない。失敗ケースは出力型の OR の一枝として表現する
 
 ## 実装方針（Policy）
 
-- TypeScript の strict モード（exactOptionalPropertyTypes、noImplicitReturns 等）
-- 判別共用体（tagged union）で OR を表現。各バリアントには `kind` プロパティ
-- record 型と readonly で AND を表現
+- TypeScript の strict モード（`exactOptionalPropertyTypes`、`noImplicitReturns`、`noUncheckedIndexedAccess`）
+- **判別共用体（tagged union）** で OR を表現。各バリアントには `kind` プロパティ
+- **record 型 + readonly** で AND を表現
 - Optional は省略可能なフィールドとして表現
-- エラーは例外ではなく `Result` 型として表現
-  - `type Result<T, E> = { kind: 'Ok', value: T } | { kind: 'Err', error: E }`
-- 仕様DSL の data 定義は Type alias または record 型として変換
-- 仕様DSL の behavior 定義は純粋関数として変換
+- リストは `readonly T[]` または `{ first: T; rest: readonly T[] }`（1件以上を型で保証する場合）
+- 識別子は文字列リテラル型ではなくブランド型（`type 社員番号 = string & { __brand: '社員番号' }`）を検討
 
 ## 重要な変換規則
 
-1. `data X = A OR B OR C` → `type X = A | B | C`
-   - 各バリアントは `kind` プロパティで区別
-2. `data X = A AND B` → `type X = { readonly a: A; readonly b: B }`
-3. `data X = A?` → `type X = { readonly a?: A }`
-4. `data X = List<A>` → `type X = readonly A[]`
-5. `behavior f = X -> Y OR Z` → `function f(x: X): Result<Y, Z>`
+| 仕様DSL | TypeScript |
+|---|---|
+| `data X = A OR B OR C` | `type X = A \| B \| C` （各バリアントに `kind`） |
+| `data X = A AND B` | `type X = { readonly a: A; readonly b: B }` |
+| `data X = A?` | `type X = { readonly a?: A }` |
+| `data X = List<A>` | `type X = readonly A[]` |
+| `data X = List<A>` 1件以上 | `type X = { readonly first: A; readonly rest: readonly A[] }` |
+| `behavior f = X -> Y` | `function f(x: X): Y` |
+| `behavior f = X -> Y OR Z` | `function f(x: X): Y \| Z` |
+| `behavior f = X AND Y -> Z` | `function f(args: { x: X; y: Y }): Z`（名前付き引数オブジェクト） |
 
-## 重要な業務ルールの保持
+## 重要な業務概念の保持
 
-- 「事前承認要件」は型として表現すること（条件式の羅列にしないこと）
-  - 期待される実装:
-    `type 事前承認要件 = { kind: '高額出張'; amount: number } | { kind: '役職なし' } | { kind: '先方負担' }`
-- 状態ごとに別の型に分けること（`PreApproved` と `Submitted` を同じ型にしない）
-- behavior の入力型は仕様モデルのとおり厳密に絞ること
+仕様モデルで型として刻まれた業務概念を、コード生成時に boolean や enum に「平坦化」しないこと。
 
-## 成果物
+- ❌ 悪い例: `if (申請.予定費用合計 >= 100000 || 申請.申請者.役職 === 'なし') { ... }`
+- ✓ 良い例:
+  ```typescript
+  type 事前承認要件 =
+    | { kind: '高額出張'; 予定費用合計: number }
+    | { kind: '役職なし申請' }
+    | { kind: '先方負担申請' };
+  ```
 
-- 型定義（data に対応）
-- 純粋関数（behavior に対応）
-- 副作用を持つ依存関数の型定義（インターフェースのみ）
-- 各ファイルに「対応する仕様モデルへのリンク」をコメントで記載
-```
+理由: 業務的な「なぜ事前承認が必要か」を型として残すことで、後で UI に表示したり、別の判定で再利用できる。
 
-## Phase 2: Shell の実装
+## 状態は型で分けること
 
-Phase 1 で生成した Core を呼び出す Shell を生成させます。
+状態を表す `kind` で1つの型を分岐させるのではなく、**状態ごとに別の型** に分ける：
 
-```text
-Core/Shell 二段階生成の Phase 2 として、Phase 1 で生成した Core の TypeScript 実装を使って、
-REST API を実装してください。
+- ❌ `type 出張申請 = { id: string; status: 'draft' | 'submitted' | 'approved'; approver?: 社員 }`
+- ✓ `type 出張申請ドラフト = { kind: 'ドラフト'; ... }`
+  + `type 申請済み出張申請 = { kind: '申請済み'; ...; 申請日時: Date }`
+  + `type 出張申請 = 出張申請ドラフト | 申請済み出張申請`
 
-## Phase 1 の Core
+理由: 状態に応じて必須となる項目を型レベルで保証できる。`申請済み出張申請` は申請日時を必ず持つ。
 
-[Phase 1 で生成された TypeScript コードを貼り付け]
+## behavior の入力型は厳密に絞る
 
-## 実装方針（Policy）
+`behavior 上長が事前承認する` の入力型は `事前承認必要な出張申請` のみ。`申請済み出張申請` を受け取る形にすると、事前承認不要な申請でも呼べてしまう。
 
-- フレームワーク: Express
-- 認証: JWT（bearer token）
-- バリデーション: zod
-- エラーハンドリング: Core の Result 型を HTTP ステータスコードにマッピング
-  - 検証エラー → 400
-  - 権限エラー → 403
-  - 状態不整合エラー → 409
-- ロギング: pino
-- テスト: 契約テストを supertest で書く
+- ❌ `function 上長が事前承認する(申請: 申請済み出張申請, ...): 結果`
+- ✓ `function 上長が事前承認する(申請: 事前承認必要な出張申請, ...): 結果`
 
-## 制約
-
-- Core の型は一切変更しない
-- Core の関数を呼び出す形でエンドポイントを実装する
-- Core にない業務ロジックを Shell に書かない（業務ロジックが必要なら Core に戻る）
-- 永続化は OrderRepository のような interface に依存させる
-
-## エンドポイントと behavior の対応
-
-[../shell/api/business-trip-api.md の表をそのまま貼り付け]
+これにより「ありえない遷移」が型レベルで防がれる。
 
 ## 成果物
 
-- Express ルーター
-- リクエストバリデーション（zod スキーマ）
-- Core 関数の呼び出しとレスポンスマッピング
-- エラーハンドリングミドルウェア
-- 契約テスト（supertest）
-```
+次のファイル群を出力してください。各ファイルの先頭に「対応する仕様モデルへのリンク」をコメントで記載：
 
-## Phase 3: 検証ループ
+1. **`business-trip-types.ts`** — `data` 定義に対応する型のみ。pure（関数なし）
+2. **`business-trip-core.ts`** — `behavior` 定義に対応する pure 関数
+3. **`business-trip-ports.ts`** — 副作用を持つ依存（Repository, Clock, Notification など）の interface のみ。実装はしない
 
-仕様テストの3軸（構造・変換・時系列）のテストを生成させます。
+各ファイルは **依存関係が一方向** であること: `core.ts` は `types.ts` のみに依存。`core.ts` は `ports.ts` を import しても、副作用関数を呼ばない（呼ぶのは Shell の責務）。
 
-```text
-[../spec-model/business-trip.md] の仕様モデルから、
-仕様テストの規約に従ったテストを TypeScript で生成してください。
+## 出力形式
 
-## 必要なテスト
+ファイルごとにコードブロックで出力。冒頭に短い設計意図のコメントを置く。
+冗長な docstring は書かない（型と命名で表現する）。
+````
 
-1. 構造の正しさ（不変条件）
-   - 出張予定費用の合計が 0 以上
-   - 出張開始日 <= 出張終了日
-   - 申請済み出張申請には申請日時が存在する
-   - 事前承認OK には承認者と承認日時が存在する
+## 検証ループとの組み合わせ
 
-2. 変換の正しさ（全域性）
-   - 「事前承認が必要か判断する」がすべての入力区分に対して結果を返す
-   - 「上長が事前承認する」が承認者一致／不一致の両方に対応する
+エージェントが生成したコードに対して：
 
-3. 時系列の正しさ（状態遷移）
-   - 状態×操作の組み合わせ表を網羅
-   - 禁止遷移（出張申請ドラフトに対して上長が事前承認する）が型レベルで防がれる
+1. **型検査**（TypeScript なら `tsc --noEmit`） — 型エラーがないか
+2. **lint** — 規約違反がないか
+3. **仕様テスト** — 仕様モデルから導かれる性質を検証する（具体ツールは仕様モデルパーサ specifico との統合で扱う予定）
+4. **失敗があれば** [verification-loop の規約](../../reference/spec-set/ai-collaboration/verification-loop.md) でエージェントに修正させる
 
-## 実装方針
+## Strict Spec が機能する条件
 
-- property-based test: fast-check
-- 状態遷移テスト: 各状態×操作の表を fast-check で網羅
-- 各テストファイルの先頭に対応する仕様モデルのセクションへのリンクをコメント
-```
+このプロンプトが機能するのは、仕様モデル側で次が満たされているとき：
 
-## 出力例
+1. 状態ごとに data が OR で分かれている
+2. behavior の入力型が業務状態として絞られている
+3. Why が各判定規則に書かれている
+4. 業務概念が型として刻まれている（boolean ではない）
 
-エージェントの出力例（Phase 1）:
-
-```typescript
-// 仕様モデル: ../spec-model/business-trip.md
-// 出張申請の data と behavior を TypeScript として実装
-
-// === data ===
-
-export type 役職 =
-  | { readonly kind: '管理職'; readonly level: number }
-  | { readonly kind: '一般社員' };
-
-export type 費用負担区分 = '自社負担' | '先方負担';
-
-export type 社員 = {
-  readonly 社員番号: string;
-  readonly 氏名: string;
-  readonly 役職: 役職;
-};
-
-export type 事前承認要件 =
-  | { readonly kind: '高額出張'; readonly amount: number }
-  | { readonly kind: '役職なし申請' }
-  | { readonly kind: '先方負担申請' };
-
-export type 出張申請ドラフト = {
-  readonly kind: 'ドラフト';
-  readonly 出張予定: 出張予定;
-  readonly 申請者: 社員;
-};
-
-export type 申請済み出張申請 = {
-  readonly kind: '申請済み';
-  readonly 出張予定: 出張予定;
-  readonly 申請者: 社員;
-  readonly 申請日時: Date;
-};
-
-export type 事前承認必要な出張申請 = {
-  readonly kind: '事前承認必要';
-  readonly 申請済み: 申請済み出張申請;
-  readonly 事前承認要件: readonly 事前承認要件[];
-};
-
-// ... 省略
-
-// === behavior ===
-
-export type Result<T, E> =
-  | { readonly kind: 'Ok'; readonly value: T }
-  | { readonly kind: 'Err'; readonly error: E };
-
-export function 事前承認が必要か判断する(
-  申請: 申請済み出張申請,
-): 事前承認必要な出張申請 | 事前承認不要な出張申請 {
-  const 要件: 事前承認要件[] = [];
-
-  // 高額出張: 高額支出は組織として事前に妥当性を確認する必要がある
-  const 合計 = 申請.出張予定.出張予定費用.reduce((sum, 日程) => sum + 日程.予定金額, 0);
-  if (合計 >= 100_000) {
-    要件.push({ kind: '高額出張', amount: 合計 });
-  }
-
-  // 役職なし申請: 役職なしの社員は支出判断の権限を持たないため上長の判断が必要
-  if (申請.申請者.役職.kind === '一般社員') {
-    要件.push({ kind: '役職なし申請' });
-  }
-
-  // 先方負担申請: 接待との境界が曖昧になるため不適切な支出を防ぐ事前チェックが必要
-  if (申請.出張予定.費用負担区分 === '先方負担') {
-    要件.push({ kind: '先方負担申請' });
-  }
-
-  if (要件.length > 0) {
-    return { kind: '事前承認必要', 申請済み: 申請, 事前承認要件: 要件 };
-  }
-  return { kind: '事前承認不要', 申請済み: 申請 };
-}
-
-// ... 省略
-```
-
-事前承認要件が条件式の羅列ではなく型として表現され、Why コメントが各分岐に残されています。Why をプロンプトに含めた効果が出ています。
+仕様モデルが上記を満たさない場合は、Core 生成より前に [refactoring-prompt.md](refactoring-prompt.md) で仕様モデル自体を refactoring してください。
 
 ## 参照
 
-- [../../../ai-collaboration/core-generation.md](../../../ai-collaboration/core-generation.md)
-- [../../../ai-collaboration/shell-generation.md](../../../ai-collaboration/shell-generation.md)
-- [../../../ai-collaboration/verification-loop.md](../../../ai-collaboration/verification-loop.md)
+- [../../reference/spec-set/ai-collaboration/core-generation.md](../../reference/spec-set/ai-collaboration/core-generation.md)
+- Scott Wlaschin "Designing with types" シリーズ
 - Scott Wlaschin *Domain Modeling Made Functional*

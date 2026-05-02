@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'org.tw'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        // Spec-model-driven Shell uses Java 25, matching the Raoh Spring example.
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // The Core jar — referenced as a project dependency in a real multi-module
+    // build. This single-module rendering puts both packages on the same
+    // classpath; the Core remains structurally separate by package.
+    implementation files('../core-generation/build/libs/core-generation.jar')
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    implementation 'net.unit8.raoh:raoh-json:0.5.0'
+
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'com.h2database:h2'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly  'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

@@ -83,6 +83,8 @@ docs/
 - 表紙・目次・変更履歴（Gitで十分）
 - コードと冗長な処理詳細・編集仕様・物理項目名（テーブル駆動・配線プログラミング由来の項目）
 
+Traditional SIの設計書スキーマの全フィールドのうち、どれを引き継ぎ、どれを引き継がないかの一覧は [../../sdd-vs-traditional-design-docs.md](../../sdd-vs-traditional-design-docs.md) のA〜E分類表にあります。テンプレートを使っていて「Traditional SIのこの列はどこにいったか」を確認したいときは、この分類表を参照してください。判断の根拠は [design.md](design.md) の「Traditional SI設計書のどのフィールドを引き継ぐか」セクションに書いてあります。
+
 ## 進め方
 
 1. [design.md](design.md) で設計方針の全体像を読みます

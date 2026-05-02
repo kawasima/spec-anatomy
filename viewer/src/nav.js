@@ -40,10 +40,11 @@ export const NAV = [
         ],
       },
       {
-        text: "AI Collaboration",
+        text: "AI Collaboration プロンプト",
         items: [
           { text: "Refactoring プロンプト", path: "docs/ai-collaboration/refactoring-prompt.md" },
           { text: "Core 生成プロンプト", path: "docs/ai-collaboration/core-generation-prompt.md" },
+          { text: "Shell 生成プロンプト", path: "docs/ai-collaboration/shell-generation-prompt.md" },
         ],
       },
     ],
