@@ -268,6 +268,84 @@ spec-anatomy 側はそこに **refactoring-prompt のステップ6（deeper insi
 
 「同じ要件文書から、AI 駆動で実装まで自動生成する」という目的は SPDD も spec-anatomy も同じですが、**埋め込んだ設計哲学が違うと、生成される実装の品質はここまで分岐する**という示唆が得られた、と言えます。
 
+## specの位置づけ
+
+ここまでは実装スタイルの差を見てきた。もうひとつ別の軸がある。仕様変更があったときに spec とコードのどちらを直して、どちらを再生成するか、という軸だ。AI 時代の Spec-driven 系の方法論はここで分かれる。
+
+3つの立場を整理しておく。
+
+| 立場 | spec の役割 | コードの役割 | 仕様変更の経路 |
+| --- | --- | --- | --- |
+| Spec-as-source | 真実。コードは派生物 | spec から決定論的に再生成される | spec を変更 → コードを再生成 |
+| Spec-anchored | アンカー（契約）。常に最新を保つ | 真実の片側。spec と双方向同期 | spec を変更 → コードを更新（または逆方向で sync） |
+| Spec-first | 起点。最初だけ書く | 真実。spec はやがて陳腐化する | コードを変更（spec は更新しない） |
+
+SMDD（spec-anatomy）はこの軸で見ると Core と Shell で立場が違う。Core は Spec-as-source で、仕様DSLが真実、Java/TypeScript の Core 実装は仕様モデルから派生する。仕様モデルが refactor されたら Core を再生成する（[core-generation-prompt.md](../../../docs/ai-collaboration/core-generation-prompt.md) の「仕様モデルを refactoring したので Core を再生成したい」がこの想定）。Shell は Spec-anchored で、API 契約・テーブル定義の spec が anchor、実装の細部は ADR で記録する。Policy & Discretion で「方針は明示するが選択は委ねる」スタイル。
+
+SPDD は自己宣言上、Spec-anchored を主張している。[`.cursor/commands/spdd-sync.md`](https://github.com/gszhangwei/token-billing/blob/spdd-practice-demo/.cursor/commands/spdd-sync.md) の冒頭に「ensuring the prompt remains the accurate source of truth for the system design」とあり、[`.cursor/commands/spdd-generate.md`](https://github.com/gszhangwei/token-billing/blob/spdd-practice-demo/.cursor/commands/spdd-generate.md) の Review & Iteration Loop には「When reality diverges, fix the prompt first — then update the code」「The structured prompt serves as the contract between design and implementation」とある。コードを直接編集してから `/spdd-sync` で spec に戻す経路は補助として用意されているが、推奨はあくまで「spec を直してから code を再生成」だ。
+
+### 想定運用と実態のずれ
+
+SPDD の想定運用は、ひとつの prompt ファイルをひとつの機能領域の完全仕様として扱い、同じ機能領域に増分が入るときは [`/spdd-prompt-update`](https://github.com/gszhangwei/token-billing/blob/spdd-practice-demo/.cursor/commands/spdd-prompt-update.md) で既存 prompt ファイルを上書き更新する、というものだ。新しい機能領域のときだけ新規 prompt ファイルを作る。そうすれば `spdd/prompt/` 配下は機能領域別の現在仕様カタログになる。
+
+ところが `spdd-practice-demo` ブランチの実態は違う。Story 1（基本課金）で `[Feat]-api-token-usage-billing.md` を作ったあと、Story 2（マルチプラン課金）では `/spdd-prompt-update` を使わずに新規ファイル `[Feat]-multi-plan-billing-model-aware-pricing.md` を作っている。Story 1 の prompt には Story 2 で追加された `modelId`・`promptCharge`・`completionCharge` が反映されないまま残り、コード上の `Bill` クラスだけが Story 2 完了時点のフルセットになっている。prompt とコードが乖離している。
+
+自己宣言は Spec-anchored だが、運用が破綻すると SPDD は実質的に Spec-first に退化する。SPDD の設計の問題ではなく運用の問題だが、運用を強制する仕組みは現状ない。
+
+## ストーリーの総和はシステム仕様になるか
+
+SPDD には「`spdd/prompt/` 配下の全ファイルの集合がシステム全体の仕様になる」という前提が暗黙にある。`/spdd-prompt-update` で上書き更新が続けられれば、各ファイルが機能領域の最新仕様であり、その集合がシステム仕様だ、というロジックだ。
+
+この前提は新しいものではなく、過去30年のソフトウェア工学で何度も検討されてきた。歴史を見ると、条件付きでしか成り立たない近似であり、それを超えるとどこかで崩れる、というのが繰り返し確認されてきた。
+
+### XPの位置づけ
+
+Kent Beck の *Extreme Programming Explained*（1999）で User Story が登場したとき、これは「会話の約束手形（promissory note for conversation）」として位置づけられた。Ron Jeffries の 3C（Card / Conversation / Confirmation）がそれを定式化している。カードは仕様そのものではなく、会話のきっかけにすぎない。
+
+XP において仕様の本体はストーリーではなく、Acceptance Test（Customer Test）、System Metaphor、Simple Design の3つに分散していた。System Metaphor がストーリー横断のシステム全体像を担う想定だった。
+
+ところが System Metaphor は実際にはほとんど機能しなかった。Beck 自身が *Extreme Programming Explained 2nd Edition*（2004）で「XP のプラクティスのうちこれだけは明確に失敗した」と認めている。多くのチームでメタファが「クライアント・サーバ」程度の抽象に留まり、システム全体の構造を伝える媒体にならなかった。これで「ストーリーの総和の上位に何を置くか」の問題が宙ぶらりんになった。
+
+### Cohnの定式化
+
+*User Stories Applied*（2004）で Mike Cohn ははっきり書いている。
+
+> User stories are not the requirements. They are placeholders for requirements.
+
+そしてストーリーが大きくなったら epic として分解し、エピックが集まったら theme として束ねよ、という theme → epic → story の3層構造を提案している。「ストーリーの総和」だけでは全体仕様にならないことを、Cohn 自身が階層を入れる形で認めている。
+
+### SbEとLiving Documentation
+
+Gojko Adzic の *Specification by Example*（2011）と Cyrille Martraire の *Living Documentation*（2019）はこの問題に正面から答えた。両者の主張は一致している。ストーリー単体は仕様の運搬手段として不完全で、受け入れ基準（Examples）を集約したものこそが仕様であり、それをコードと同じリポジトリに置きテストで保証することで Living Documentation になる。ただしドメインモデル・アーキテクチャ・横断制約は Examples からは自動的には生まれず、別途モデリングが要る、というのが共通の結論だ。
+
+Cucumber の `.feature` ファイルは「1機能 = 1ファイルで上書き更新」という運用が想定されており、SPDD の `/spdd-prompt-update` の発想と近い。BDD コミュニティが20年かけて辿り着いたのは、`.feature` ファイルの集合は振る舞いの仕様にはなっても、ドメインモデル・アーキテクチャ・横断制約の仕様にはならない、という認識である。
+
+### DDDからの答え
+
+Eric Evans の *Domain-Driven Design*（2003）は別の角度から同じ問題を扱った。ユビキタス言語と境界づけられたコンテキストはストーリーの足し算からは出てこない。ドメインモデルは業務全体に対する仮説であり、ストーリー1つに紐づくものではない。順序は逆で、ドメインモデルが先にあり、その上にストーリーが乗る。
+
+DDD コミュニティが Scrum と相性が悪いと長く言われてきた理由はここにある。Scrum はストーリーの優先順位付けが主、DDD はドメインモデルの構造化が主で、出発点が違う。両立させるには Event Storming のように、ストーリーを越えてシステム全体を描き出す手段を別途入れる必要があった。
+
+### 何が抜け落ちるのか
+
+ストーリーの総和を仕様と呼ぶときに抜け落ちるものは、垂直方向と横断方向の2つに整理できる。
+
+垂直方向に抜けるのは「なぜそう設計したのか」だ。ストーリーは「ユーザーから見える振る舞い」を記述する切り口で、その下にあるドメインモデルやアーキテクチャ判断を記述する切り口ではない。なぜ Bill を sealed interface に分けるのか、なぜ Repository を分けるのか、なぜ適用超過レートをスナップショットするのか、といった判断はストーリー単体に書きにくいし、ストーリーの和を取っても出てこない。
+
+横断方向に抜けるのは「複数のストーリーが同時に触る不変条件」だ。請求記録は計算日時を超えて書き換えられない、料金プランの変更は過去の請求記録に遡及しない、サブスクリプションは同顧客同時刻に1つしか有効でない、といった性質は個別のストーリーが書かれた時点では明示されにくい。後から「全ストーリーをまたいで成立すべき性質」として浮上することが多い。
+
+### SMDDとSPDDの違い
+
+SMDD はこの2つを領域別ファイル分割で扱う。spec-model（ドメインの不変条件・全域性）が Core として最上位にあり、ストーリーはその上の「業務操作の組合せ」として乗る。Core/Shell の二段階で垂直階層を表す。横断的な性質は spec-tests（不変条件・状態遷移・全域性）として別カテゴリに置き、複数 behavior にまたがる性質を property として記述する。ファイルは領域別（spec-model / shell/api / shell/persistence / spec-tests）に分割され、ストーリー単位ではない。
+
+SPDD は同じ問題を REASONS Canvas の E（Entities）と S（Safeguards）に詰め込む形で扱う。1ファイル内で垂直（E）と横断（S）を表現しようとする。機能領域が小さいうちは機能するが、領域が増えると複数ファイルの E と S が互いに整合しているかは `/spdd-prompt-update` の手作業に依存する。機能領域単位の Spec-anchored が運用で守られる限り、SPDD は Specification by Example の延長として成立する。守られなければ Spec-first に退化する。
+
+### 結論
+
+「ユーザーストーリーの総和 = システム全体の仕様」は、過去30年のソフトウェア工学が誰も完全には信じてこなかった近似だ。XP は System Metaphor で補おうとして失敗し、Cohn は階層構造を入れ、SbE は Examples の集約とドメインモデルの分離で答え、DDD は最初からドメインモデルを優先するスタンスを取った。SPDD はストーリー単位の prompt ファイルが上書き更新で育てば全体仕様になる、という前提に立つが、これは BDD コミュニティが既に通った道であり、`/spdd-prompt-update` の運用が破綻したときの帰結を demo ブランチが示している。
+
+token-billing くらいの小さなドメインで Story 1 だけを実装する範囲なら SPDD で十分だ。Story 2、Story 3 と増えたときに、ストーリーを越えた全体構造をどこに書くのかが残課題になる。SMDD はそれを spec-set のディレクトリ構造として最初から組み込み、SPDD は `/spdd-prompt-update` の手作業に委ねている。
+
 ## 関連
 
 - 元素材: [source-material.md](source-material.md)
