@@ -8,7 +8,7 @@ const REPO_ROOT = resolve(".");
 // Vite の root は viewer/ なので、それ以外のリポジトリ内パスは
 // 自前で読み込んで返す。
 function repoFilesPlugin() {
-  const ALLOW_PREFIXES = ["/docs/", "/reference/", "/tools/", "/sdd.md", "/sdd-vs-traditional-design-docs.md", "/README.md"];
+  const ALLOW_PREFIXES = ["/examples/", "/reference/", "/tools/", "/sdd.md", "/sdd-vs-traditional-design-docs.md", "/README.md"];
   const MIME = {
     md: "text/markdown; charset=utf-8",
     html: "text/html; charset=utf-8",
@@ -26,7 +26,7 @@ function repoFilesPlugin() {
   };
 
   // 書き込み許可するパス（プロジェクト仕様の書き場所のみ）
-  const WRITABLE_PREFIXES = ["docs/"];
+  const WRITABLE_PREFIXES = ["examples/"];
   const WRITABLE_EXTS = new Set(["md", "html", "png"]);
 
   function isPathSafe(rel) {
