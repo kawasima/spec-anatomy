@@ -3,6 +3,27 @@ name: トークン課金
 description: 月間枠と超過レートに基づくトークン使用量課金の仕様モデル
 status: approved
 last-reviewed: 2026-05-02
+owns:
+  persistence:
+    - customers.customer_id
+    - customers.customer_name
+    - subscriptions.customer_id
+    - subscriptions.plan_code
+    - subscriptions.start_month
+    - subscriptions.end_month
+    - billing_records.customer_id
+    - billing_records.billing_month
+    - billing_records.kind
+    - billing_records.consumed_tokens
+    - billing_records.included_tokens
+    - billing_records.overage_tokens
+    - billing_records.overage_rate
+    - billing_records.total_charge
+  api:
+    - GET /customers/{customerId}/billings/{billingMonth}
+    - POST /billings/calculate
+  representation_versions:
+    - 1
 ---
 
 # トークン課金
@@ -17,6 +38,15 @@ LLM API のトークン使用量から、月間枠と超過レートに基づい
 - 「当月消費」「料金プラン」を別の概念として独立させ、課金計算がそれらをどう参照するかを behavior の入力で明示する
 - トークン数・金額・月といった値の不変条件（非負・特定の通貨単位・暦月）を data 定義レベルで宣言する
 - 計算ロジックの中に Why を残す（なぜ1000で割るのか、なぜ枠を先に消費するのか）
+
+### 採用した軸と採らなかった代替軸
+
+`請求 = 枠内請求 OR 超過込み請求` の分割軸を採るにあたり、次の代替軸も検討しました。記録の目的は将来の枝追加・削除判断のための材料を残すことです (`reference/spec-set/ai-collaboration/refactoring-with-agents.md` ステップ4-A1〜A3 参照)。
+
+- **採用: 枠消費の有無で分ける (枠内請求 OR 超過込み請求)**。枝ごとに不変条件が異なる (枠内請求は超過レートを持たない、超過込み請求は超過トークン数と超過レートを必須とする) ため、Core の OR の枝として持ち込む価値がある。
+- **採らなかった軸: 請求周期で分ける (月次請求 OR 単発請求)**。仮に単発請求が必要になっても、枠消費と超過の構造そのものは共通になる。集計周期は behavior の入力 (対象月) として渡せば足り、data の枝にする必要はない。
+- **採らなかった軸: 顧客タイプで分ける (Premium 請求 OR Standard 請求)**。プラン種別は枠の大きさ (`monthly_quota`) と超過レートに反映されるため、料金プランという別概念で吸収できる。請求結果の構造そのものは同じなので、`請求` の OR にはしない。Premium 専用フィールドが必要になった時点で軸として再検討する。
+- **採らなかった軸: 入力形式で分ける (legacy_billing 行 OR new_billing 行)**。これは Core の関心事ではなく、永続表現の差異 (`representation_version`) として `shell/persistence/` 側で吸収すべき。Core を入力形式に追従させると spec-model が永続レイアウトに従属する。
 
 ## 基本概念
 

@@ -152,9 +152,67 @@ CREATE TABLE order_events (
 
 イベント系列が長くなると、毎回 fold するコストが効いてきます。途中の状態をスナップショットとして保存し、「fold(全体) = fold(fold(前半), 後半)」の性質を利用して再開します。
 
+## 永続表現の版管理
+
+`data` の構造が時間とともに変わるとき、書き込み済みの行を一括で UPDATE しようとすると切り戻し経路を失います。新コードがデプロイされた瞬間に旧データが読めなくなるからです。
+
+代わりに、各テーブルに `representation_version` カラムを持たせ、行ごとにどの世代のレイアウトで書かれたかを保存します。読み出しは `representation_version` でディスパッチして現在のドメインモデルへ変換し、書き込みは現在版に固定します。読み込みは過去互換、書き込みは現在形、という非対称性で古い表現を自然に減らします。
+
+```sql
+ALTER TABLE orders
+  ADD COLUMN representation_version integer NOT NULL DEFAULT 1;
+```
+
+```text
+DB の行 + representation_version
+  ↓
+バージョン別の DB decoder
+  ↓
+現在のドメインモデル
+```
+
+### 規約
+
+- 集約の各テーブルは `representation_version integer NOT NULL DEFAULT 1` カラムを持つ
+- 読み出し側は `representation_version` の値でディスパッチして現在の `data` 型に変換する。未対応の版に対するエラーは廃棄候補の検出にも使える
+- 書き込み側は常に現在版で書く。古い版を維持する手段として書き戻しを使わない
+- `representation_version` のバンプは spec-model の Front matter `owns.representation_versions` と整合させる
+- バンプの判断は ADR に記録する (どの spec-model 変更がきっかけか、旧版の `retire_when` 条件は何か)
+
+### 業務上の variant と representation_version は直交させる
+
+`representation_version` はあくまで行レイアウトの世代番号で、業務上の種別を表す軸ではありません。たとえば「v3 のレイアウトを保ちつつ、その行が legacy_billing を持つか billing_profile を持つか」という変化は、`representation_version=3` の中で `billing_kind` のような別カラムとして直交的に表現します。
+
+世代の更新は「カラムが増える/減る」レベルで起き、世代の中の variant は spec-model の `OR` の枝として書く、というのが筋の良い分担です。ここを混ぜると「v3 だから billing は profile に揃っているはず」のような暗黙の前提がコードの読み手に紛れ込みます。
+
+### Expand-Contract 段階移行
+
+新しい版を導入するときは、Refactoring Databases の expand-contract に従います。
+
+```text
+1. NULL 許容の新カラムを追加
+2. decoder は旧版・新版の両方を受ける
+3. 新しい書き込みは新版カラムを埋める
+4. 背景処理または読み出し時に旧行を新版へ書き戻す
+5. 全行が新版化されたことを確認 (spec-model の retire_when の SQL がここに対応する)
+6. NOT NULL / CHECK / 外部キー / インデックスを強化
+7. 旧版用の decoder と旧カラムを削除
+```
+
+旧版の `decoder` と旧カラムは、対応する spec-model が `status: deprecated` になり `retire_when` がすべて満たされた時点で削除候補に挙がります。
+
+### 永続表現のレイアウトの選び方
+
+| パターン | 向く場合 | 欠点 |
+| --- | --- | --- |
+| 横長テーブル + representation_version | SQL 検索や既存制約を維持したい | NULL 許容カラムが増える |
+| 安定カラム + バージョン付き JSON 列 | 変化点が局所的 | DB 制約・インデックスが弱くなる |
+| バージョン別の詳細テーブル | バージョンごとに制約を強くしたい | join と decoder が複雑になる |
+| スナップショット + 版番号 | Event Sourcing / スナップショット向け | 通常の CRUD には重い |
+
 ## ADR で記録する判断
 
-永続化方式の選定（Data Mapper / Repository / Active Record / CQRS / イミュータブル）は ADR として記録します。判断の根拠（業務の複雑さ、性能要件、チームのフレームワーク習熟度）を残しておくと、後から見直すときに便利です。
+永続化方式の選定（Data Mapper / Repository / Active Record / CQRS / イミュータブル）と、`representation_version` のバンプ判断は ADR として記録します。判断の根拠（業務の複雑さ、性能要件、チームのフレームワーク習熟度、データ移行コスト）を残しておくと、後から見直すときに便利です。
 
 詳細は [../../adrs/README.md](../../adrs/README.md)。
 

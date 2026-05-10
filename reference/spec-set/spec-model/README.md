@@ -58,10 +58,51 @@ name: <業務領域の名前>
 description: <1行の説明>
 status: draft / approved / deprecated
 last-reviewed: YYYY-MM-DD
+owns:
+  persistence: [<table.column のリスト>]
+  api: [<endpoint のリスト>]
+  representation_versions: [<バージョン番号のリスト>]
+retire_when:               # status: deprecated のときのみ必須
+  - description: <廃止条件の自然言語>
+    sql: <SQL クエリ>
+    expect: 0
+  - description: <別の条件>
+    metric: <メトリクス名>
+    window: 30d
+    expect: 0
 ---
 ```
 
 `axis` や `kind` のような分類タグ、`related.aggregates` のような関連参照は置きません。仕様DSL のコードブロックの中で参照する型名と、本文中の Markdown リンクで関連を表現します。
+
+#### `owns`: この仕様が所有する Shell 側の構成要素
+
+`owns` は、この `data` / `behavior` の存在によって生まれる Shell 側の構成要素を列挙します。`status: deprecated` になったとき、何を一緒に削除する必要があるかの追跡情報になります。
+
+- `persistence`: 関連する RDB テーブルとカラム (`orders.shipping_address` のように `<table>.<column>` で書く)
+- `api`: 関連する API エンドポイント (`POST /orders/v1` のような形)
+- `representation_versions`: shell/persistence で使うバージョン付き永続表現のうち、この仕様が対応する版番号
+
+これらは spec-model 単独では検証できないので、`shell/persistence/README.md` や `shell/api/README.md` の規約と整合する形で書きます。
+
+#### `retire_when`: いつ捨ててよいかの条件
+
+`status: deprecated` を付けるときは、この仕様を実際に削除してよい条件を `retire_when` に書きます。条件は CI から実行可能な形 (SQL またはメトリクスクエリ) で書きます。
+
+```yaml
+retire_when:
+  - description: 旧形式の永続表現が残っていない
+    sql: "select count(*) from orders where representation_version = 1"
+    expect: 0
+  - description: 旧入力形式での流入が30日間ない
+    metric: ingress.orders.legacy_format.count
+    window: 30d
+    expect: 0
+```
+
+すべての条件が満たされた仕様は、削除候補として `verification-loop.md` の検証ループから検出されます。条件を書かずに `status: deprecated` だけを付けると、削除のトリガーがないまま仕様が残り続けるので、`deprecated` と `retire_when` はセットで運用します。
+
+`deprecated` でない仕様には `retire_when` は不要ですが、後で deprecated に移行することが見えている場合 (例: 段階展開中の旧版) は、移行時に `retire_when` を併記できるよう `owns` を先に整備しておくと良いです。
 
 ### 本文
 
