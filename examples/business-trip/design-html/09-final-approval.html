@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>出張申請 最終承認</title>
+<style>
+  :root{
+    --bg:#f3f4f6; --card:#fff; --ink:#111827; --ink2:#374151; --muted:#6b7280;
+    --line:#e5e7eb; --line2:#d1d5db; --title:#1f2937;
+    --primary:#2563eb; --primary-ink:#fff; --danger:#dc2626;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;
+    background:var(--bg); margin:0; padding:24px; color:var(--ink);}
+  .screen{max-width:1040px; margin:0 auto; background:var(--card); border-radius:8px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08); overflow:hidden;}
+  .screen-title{background:var(--title); color:#fff; padding:14px 20px; font-size:18px; font-weight:600;
+    display:flex; justify-content:space-between; align-items:center; gap:12px;}
+  .section{padding:20px; border-bottom:1px solid var(--line);}
+  .section:last-child{border-bottom:none;}
+  .section-heading{font-size:14px; font-weight:600; color:var(--ink2); margin:0 0 14px;
+    padding-bottom:8px; border-bottom:2px solid var(--line2);}
+  .ro-grid{display:grid; grid-template-columns:150px 1fr; gap:10px 16px; font-size:14px;}
+  .ro-grid dt{color:var(--muted); font-size:13px;}
+  .ro-grid dd{margin:0; color:var(--ink);}
+  table.detail{width:100%; border-collapse:collapse; font-size:14px;}
+  table.detail th,table.detail td{border:1px solid var(--line); padding:6px 8px; text-align:left;}
+  table.detail th{background:#f9fafb; font-weight:600; color:var(--ink2); font-size:13px;}
+  table.detail td.amount,table.detail th.amount{text-align:right; font-variant-numeric:tabular-nums;}
+  table.detail tfoot td{background:#f9fafb; font-weight:600; text-align:right;}
+  .over{color:var(--danger);}
+  .badge{display:inline-block; padding:2px 8px; border-radius:10px; font-size:12px; font-weight:600;}
+  .s-pre-ok{background:#d1fae5; color:#065f46;}
+  .banner{padding:12px 16px; border-radius:6px; font-size:14px; margin-bottom:16px;}
+  .banner-info{background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe;}
+  .btn{padding:10px 20px; border:none; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer;}
+  .btn-primary{background:var(--primary); color:var(--primary-ink);}
+  .actions{display:flex; justify-content:flex-end; gap:12px; flex-wrap:wrap; align-items:center;}
+  .hint{font-size:12px; color:var(--muted); margin-top:4px;}
+  @media (max-width:640px){
+    body{padding:12px;}
+    .ro-grid{grid-template-columns:1fr; gap:6px;}
+    .table-scroll{overflow-x:auto;}
+    table.detail{min-width:560px;}
+    .actions{justify-content:stretch;}
+    .actions .btn{flex:1;}
+  }
+</style>
+</head>
+<body>
+  <div class="screen">
+    <div class="screen-title"><span>出張申請 最終承認</span></div>
+
+    <!-- 参照領域 -->
+    <section class="section" data-group="参照領域">
+      <h2 class="section-heading">申請内容</h2>
+      <dl class="ro-grid">
+        <dt data-item="申請ID">申請ID</dt>
+        <dd data-item="申請ID">BT-2026-0142</dd>
+
+        <dt data-item="申請者">申請者</dt>
+        <dd data-item="申請者">山田 太郎(EMP-000123)</dd>
+
+        <dt data-item="出張目的">出張目的</dt>
+        <dd data-item="出張目的">大阪支社での新サービス企画会議に出席するため</dd>
+
+        <dt data-item="出張期間">出張期間</dt>
+        <dd data-item="出張期間">2026/05/12 〜 2026/05/14</dd>
+
+        <dt data-item="費用負担区分">費用負担区分</dt>
+        <dd data-item="費用負担区分">自社負担</dd>
+
+        <dt data-item="事前承認状態">事前承認状態</dt>
+        <dd data-item="事前承認状態"><span class="badge s-pre-ok">事前承認済</span></dd>
+      </dl>
+    </section>
+
+    <!-- 費用比較領域 -->
+    <section class="section" data-group="費用比較領域">
+      <h2 class="section-heading">予定と実績の費用比較</h2>
+      <div class="table-scroll">
+        <table class="detail">
+          <thead>
+            <tr>
+              <th data-item="費目">費目</th>
+              <th class="amount" data-item="予定金額">予定金額</th>
+              <th class="amount" data-item="実績金額">実績金額</th>
+              <th class="amount" data-item="差額">差額</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>交通費</td>
+              <td class="amount">28,000 円</td>
+              <td class="amount over">30,000 円</td>
+              <td class="amount over">+2,000 円</td>
+            </tr>
+            <tr>
+              <td>宿泊費</td>
+              <td class="amount">22,000 円</td>
+              <td class="amount">22,000 円</td>
+              <td class="amount">0 円</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>合計</td>
+              <td class="amount" data-item="予定費用合計">50,000 円</td>
+              <td class="amount" data-item="実績費用合計">52,000 円</td>
+              <td class="amount over" data-item="差額合計">+2,000 円</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="hint">赤字は予定金額を超過した実績です。差額のプラスは立替の追加、マイナスは予定内の実績を表します。</p>
+    </section>
+
+    <!-- 操作領域 -->
+    <section class="section" data-group="操作領域">
+      <div class="banner banner-info" data-item="最終承認の補足">
+        最終承認すると立替金額が経理システムへ連携されます。
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" data-item="最終承認する">最終承認する</button>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

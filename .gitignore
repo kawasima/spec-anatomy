@@ -2,3 +2,8 @@ node_modules/
 dist/
 *.log
 .DS_Store
+__pycache__/
+*.py[cod]
+
+# Nablarch開発標準の空テンプレート（CC BY-SA 4.0）は同梱せず build 時に取得する
+examples/business-trip/traditional-design/_templates/

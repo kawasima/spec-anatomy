@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>出張実績登録</title>
+<style>
+  :root{
+    --bg:#f3f4f6; --card:#fff; --ink:#111827; --ink2:#374151; --muted:#6b7280;
+    --line:#e5e7eb; --line2:#d1d5db; --title:#1f2937;
+    --primary:#2563eb; --primary-ink:#fff; --danger:#dc2626;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;
+    background:var(--bg); margin:0; padding:24px; color:var(--ink);}
+  .screen{max-width:1040px; margin:0 auto; background:var(--card); border-radius:8px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08); overflow:hidden;}
+  .screen-title{background:var(--title); color:#fff; padding:14px 20px; font-size:18px; font-weight:600;
+    display:flex; justify-content:space-between; align-items:center; gap:12px;}
+  .section{padding:20px; border-bottom:1px solid var(--line);}
+  .section:last-child{border-bottom:none;}
+  .section-heading{font-size:14px; font-weight:600; color:var(--ink2); margin:0 0 14px;
+    padding-bottom:8px; border-bottom:2px solid var(--line2);}
+  .ro-grid{display:grid; grid-template-columns:150px 1fr; gap:10px 16px; font-size:14px;}
+  .ro-grid dt{color:var(--muted); font-size:13px;}
+  .ro-grid dd{margin:0; color:var(--ink);}
+  table.detail{width:100%; border-collapse:collapse; font-size:14px;}
+  table.detail th,table.detail td{border:1px solid var(--line); padding:6px 8px; text-align:left;}
+  table.detail th{background:#f9fafb; font-weight:600; color:var(--ink2); font-size:13px;}
+  table.detail input,table.detail select{padding:4px 6px; border:1px solid var(--line2);
+    border-radius:3px; font-size:13px; font-family:inherit; width:100%;}
+  table.detail td.amount,table.detail th.amount{text-align:right; font-variant-numeric:tabular-nums;}
+  table.detail tfoot td{background:#f9fafb; font-weight:600; text-align:right;}
+  .over{color:var(--danger);}
+  .badge{display:inline-block; padding:2px 8px; border-radius:10px; font-size:12px; font-weight:600;}
+  .s-pre-ok{background:#d1fae5; color:#065f46;}
+  .btn{padding:10px 20px; border:none; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer;}
+  .btn-primary{background:var(--primary); color:var(--primary-ink);}
+  .btn-tertiary{background:#fff; color:#374151; border:1px solid var(--line2);}
+  .btn-add{padding:6px 14px; background:#f3f4f6; color:#374151; border:1px solid var(--line2);
+    border-radius:4px; font-size:13px; cursor:pointer;}
+  .btn-mini{background:none; border:none; color:var(--danger); cursor:pointer; font-size:13px;}
+  .actions{display:flex; justify-content:flex-end; gap:12px; flex-wrap:wrap; align-items:center;}
+  .actions .spacer{margin-right:auto;}
+  .hint{font-size:12px; color:var(--muted); margin-top:4px;}
+  @media (max-width:640px){
+    body{padding:12px;}
+    .ro-grid{grid-template-columns:1fr; gap:6px;}
+    .table-scroll{overflow-x:auto;}
+    table.detail{min-width:560px;}
+    .actions{justify-content:stretch;}
+    .actions .btn{flex:1;}
+  }
+</style>
+</head>
+<body>
+  <div class="screen">
+    <div class="screen-title"><span>出張実績登録</span></div>
+
+    <!-- 参照領域 -->
+    <section class="section" data-group="参照領域">
+      <h2 class="section-heading">申請内容</h2>
+      <dl class="ro-grid">
+        <dt data-item="申請ID">申請ID</dt>
+        <dd data-item="申請ID">BT-2026-0142</dd>
+
+        <dt data-item="出張目的">出張目的</dt>
+        <dd data-item="出張目的">大阪支社での新サービス企画会議に出席するため</dd>
+
+        <dt data-item="出張期間">出張期間</dt>
+        <dd data-item="出張期間">2026/05/12 〜 2026/05/14</dd>
+
+        <dt data-item="費用負担区分">費用負担区分</dt>
+        <dd data-item="費用負担区分">自社負担</dd>
+
+        <dt data-item="予定費用合計">予定費用合計</dt>
+        <dd data-item="予定費用合計">50,000 円</dd>
+
+        <dt data-item="事前承認状態">事前承認状態</dt>
+        <dd data-item="事前承認状態"><span class="badge s-pre-ok">事前承認済</span></dd>
+      </dl>
+    </section>
+
+    <!-- 実績費用明細領域 -->
+    <section class="section" data-group="実績費用明細領域">
+      <h2 class="section-heading">実績費用明細</h2>
+      <div class="table-scroll">
+        <table class="detail">
+          <thead>
+            <tr>
+              <th data-item="実績日付">実績日付<span class="req">*</span></th>
+              <th data-item="費目">費目<span class="req">*</span></th>
+              <th class="amount" data-item="実績金額">実績金額<span class="req">*</span></th>
+              <th data-item="明細削除"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="text" value="2026/05/12"></td>
+              <td><select><option>交通費</option><option>宿泊費</option><option>交際費</option></select></td>
+              <td class="amount"><input type="text" value="30000" style="text-align:right;"></td>
+              <td><button class="btn-mini">削除</button></td>
+            </tr>
+            <tr>
+              <td><input type="text" value="2026/05/12"></td>
+              <td><select><option>宿泊費</option><option>交通費</option><option>交際費</option></select></td>
+              <td class="amount"><input type="text" value="22000" style="text-align:right;"></td>
+              <td><button class="btn-mini">削除</button></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="2">実績費用合計</td><td class="amount" data-item="実績費用合計">52,000 円</td><td></td></tr>
+          </tfoot>
+        </table>
+      </div>
+      <div style="margin-top:10px;"><button class="btn-add" data-item="明細を追加">+ 明細を追加</button></div>
+      <p class="hint">出張中に発生した費用を実費で入力してください。予定金額との差額は最終承認で確認されます。</p>
+    </section>
+
+    <!-- 操作領域 -->
+    <section class="section" data-group="操作領域">
+      <div class="actions">
+        <button class="btn btn-tertiary spacer" data-item="戻る">戻る</button>
+        <button class="btn btn-primary" data-item="確認する">確認する</button>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

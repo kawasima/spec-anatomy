@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>出張申請登録完了</title>
+<style>
+  :root{
+    --bg:#f3f4f6; --card:#fff; --ink:#111827; --ink2:#374151; --muted:#6b7280;
+    --line:#e5e7eb; --line2:#d1d5db; --title:#1f2937;
+    --primary:#2563eb; --primary-ink:#fff; --danger:#dc2626;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;
+    background:var(--bg); margin:0; padding:24px; color:var(--ink);}
+  .screen{max-width:1040px; margin:0 auto; background:var(--card); border-radius:8px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08); overflow:hidden;}
+  .screen-title{background:var(--title); color:#fff; padding:14px 20px; font-size:18px; font-weight:600;
+    display:flex; justify-content:space-between; align-items:center; gap:12px;}
+  .section{padding:20px; border-bottom:1px solid var(--line);}
+  .section:last-child{border-bottom:none;}
+  .section-heading{font-size:14px; font-weight:600; color:var(--ink2); margin:0 0 14px;
+    padding-bottom:8px; border-bottom:2px solid var(--line2);}
+
+  /* フォーム（ラベル140px + 入力） */
+  .form-grid{display:grid; grid-template-columns:150px 1fr; gap:14px 16px; align-items:start;}
+  .form-grid label{padding:6px 0; font-size:13px; color:var(--ink2);}
+  .form-grid label .req{color:var(--danger); margin-left:3px;}
+  .form-grid input[type=text],.form-grid select,.form-grid textarea{padding:8px 10px;
+    border:1px solid var(--line2); border-radius:4px; font-size:14px; font-family:inherit; width:100%;}
+  .form-grid textarea{resize:vertical; min-height:80px;}
+  .radio-group{display:flex; gap:16px; padding:6px 0; font-size:14px;}
+
+  /* 読み取り専用（確認画面・参照領域） */
+  .ro-grid{display:grid; grid-template-columns:150px 1fr; gap:10px 16px; font-size:14px;}
+  .ro-grid dt{color:var(--muted); font-size:13px;}
+  .ro-grid dd{margin:0; color:var(--ink);}
+
+  /* 明細テーブル */
+  table.detail{width:100%; border-collapse:collapse; font-size:14px;}
+  table.detail th,table.detail td{border:1px solid var(--line); padding:6px 8px; text-align:left;}
+  table.detail th{background:#f9fafb; font-weight:600; color:var(--ink2); font-size:13px;}
+  table.detail input,table.detail select{padding:4px 6px; border:1px solid var(--line2);
+    border-radius:3px; font-size:13px; font-family:inherit; width:100%;}
+  table.detail td.amount,table.detail th.amount{text-align:right; font-variant-numeric:tabular-nums;}
+  table.detail tfoot td{background:#f9fafb; font-weight:600; text-align:right;}
+  .over{color:var(--danger);}  /* 実績超過などの赤字 */
+
+  /* 一覧テーブル */
+  table.list{width:100%; border-collapse:collapse; font-size:14px;}
+  table.list th,table.list td{border-bottom:1px solid var(--line); padding:10px 12px; text-align:left;}
+  table.list th{background:#f9fafb; font-weight:600; color:var(--ink2); font-size:13px;}
+  table.list td.amount{text-align:right; font-variant-numeric:tabular-nums;}
+  table.list a.row-link{color:var(--primary); text-decoration:none; font-weight:600;}
+  table.list a.row-link:hover{text-decoration:underline;}
+  tr.cancelled td{color:var(--muted);}
+  tr.cancelled a.row-link{color:var(--muted); text-decoration:line-through;}
+
+  /* 状態バッジ（申請状態10種） */
+  .badge{display:inline-block; padding:2px 8px; border-radius:10px; font-size:12px; font-weight:600;}
+  .s-draft{background:#e5e7eb; color:#374151;}       /* 00 下書き */
+  .s-submitted{background:#dbeafe; color:#1e40af;}    /* 10 申請済 */
+  .s-pre-wait{background:#fef3c7; color:#92400e;}      /* 20 事前承認待ち */
+  .s-pre-none{background:#e0f2fe; color:#075985;}      /* 21 事前承認不要 */
+  .s-pre-ok{background:#d1fae5; color:#065f46;}        /* 30 事前承認済 */
+  .s-pre-ng{background:#fee2e2; color:#991b1b;}        /* 31 事前承認却下 */
+  .s-actual{background:#e0e7ff; color:#3730a3;}        /* 40 実績登録済 */
+  .s-final{background:#bbf7d0; color:#14532d;}         /* 50 最終承認済 */
+  .s-linked{background:#f1f5f9; color:#334155;}        /* 60 経理連携済 */
+  .s-cancelled{background:#f3f4f6; color:#9ca3af;}     /* 90 取消済 */
+
+  /* 通知・メッセージ帯 */
+  .banner{padding:12px 16px; border-radius:6px; font-size:14px; margin-bottom:16px;}
+  .banner-info{background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe;}
+  .banner-warn{background:#fffbeb; color:#92400e; border:1px solid #fde68a;}
+  .banner-success{background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0;}
+
+  /* 完了画面の中央寄せ */
+  .done{padding:48px 24px; text-align:center;}
+  .done .mark{font-size:40px; line-height:1;}
+  .done h2{font-size:18px; margin:16px 0 8px;}
+  .done p{color:var(--muted); margin:4px 0;}
+
+  /* 要件リスト（事前承認要件） */
+  ul.reqs{list-style:none; margin:0; padding:0;}
+  ul.reqs li{padding:10px 12px; background:#fffbeb; border:1px solid #fde68a; border-radius:6px;
+    margin-bottom:8px; font-size:14px;}
+
+  /* ボタン */
+  .btn{padding:10px 20px; border:none; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer;}
+  .btn-primary{background:var(--primary); color:var(--primary-ink);}
+  .btn-secondary{background:#e5e7eb; color:#374151;}
+  .btn-tertiary{background:#fff; color:#374151; border:1px solid var(--line2);}
+  .btn-danger{background:#fff; color:var(--danger); border:1px solid #fca5a5;}
+  .btn-add{padding:6px 14px; background:#f3f4f6; color:#374151; border:1px solid var(--line2);
+    border-radius:4px; font-size:13px; cursor:pointer;}
+  .btn-mini{background:none; border:none; color:var(--danger); cursor:pointer; font-size:13px;}
+  .actions{display:flex; justify-content:flex-end; gap:12px; flex-wrap:wrap;}
+  .actions .spacer{margin-right:auto;}  /* 左寄せにしたい破棄などの前に置く */
+
+  /* レスポンシブ */
+  @media (max-width:640px){
+    body{padding:12px;}
+    .form-grid,.ro-grid{grid-template-columns:1fr; gap:6px;}
+    .form-grid label{padding:0;}
+    .filter-grid{grid-template-columns:1fr 1fr !important;}
+    .table-scroll{overflow-x:auto;}
+    table.detail,table.list{min-width:560px;}
+    .actions{justify-content:stretch;}
+    .actions .btn{flex:1;}
+  }
+</style>
+</head>
+<body>
+  <div class="screen">
+    <div class="screen-title"><span>出張申請登録完了</span></div>
+
+    <!-- 完了メッセージ領域 -->
+    <section class="section" data-group="完了メッセージ領域">
+      <div class="done">
+        <div class="mark" data-item="完了マーク">✓</div>
+        <h2 data-item="完了メッセージ">出張申請を登録しました。</h2>
+        <p data-item="申請ID">申請ID: BT-2026-0142</p>
+        <p data-item="事前承認案内">この申請は上長の事前承認が必要です。承認依頼を送信しました。</p>
+      </div>
+    </section>
+
+    <!-- 操作領域 -->
+    <section class="section" data-group="操作領域">
+      <div class="actions">
+        <button class="btn btn-tertiary" data-item="一覧へ戻る">一覧へ戻る</button>
+        <button class="btn btn-primary" data-item="続けて申請する">続けて申請する</button>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

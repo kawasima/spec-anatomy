@@ -13,16 +13,20 @@
 
 ## 構成
 
-- [spec-model/](spec-model/) — Core の仕様モデル（最終形と初期モデル）
+このサンプルは before（従来SI設計書一式）と after（洗練された Spec Set）を対にして持ちます。
+
+- [traditional-design/](traditional-design/) — **before**。従来のSIerが Nablarch開発標準の書式で書いた設計書一式（27ブックのExcel）。同じ出張申請を「手続きと状態コード」で設計したらどうなるか
+- [spec-model/](spec-model/) — **after**。Core の仕様モデル（最終形と初期モデル）
   - [business-trip.md](spec-model/business-trip.md) — 出張申請の data と behavior（洗練後の最終形）
   - [business-trip-initial.md](spec-model/business-trip-initial.md) — 初期モデル（洗練前との比較用）
-- [shell/](shell/) — Shell の例（API、永続、UI の最小例）
+- [shell/](shell/) — **after**。Shell の例（API、永続、UI の最小例）
   - [api/](shell/api/) — REST API の例
   - [persistence/](shell/persistence/) — 永続モデルの例
   - [ui/](shell/ui/) — 画面の例
 - [ai-collaboration/](ai-collaboration/) — エージェントとのやり取りのサンプル
   - [refactoring-prompt.md](ai-collaboration/refactoring-prompt.md) — 既存設計書から Core を抽出する例
   - [core-generation-prompt.md](ai-collaboration/core-generation-prompt.md) — Core からコードを生成する例
+  - [excel-to-spec-evaluation.md](ai-collaboration/excel-to-spec-evaluation.md) — before の設計書一式から after の仕様モデルへ組み替える過程の記録
 
 ## 使い方
 

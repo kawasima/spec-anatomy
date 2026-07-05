@@ -15,11 +15,15 @@ last-reviewed: 2026-04-27
 flowchart TD
   Start([ログイン後]) --> List[SCREEN-BT-01\n出張申請一覧]
   List -->|新規申請ボタン| Create[SCREEN-BT-03\n出張申請作成・編集]
-  List -->|ドラフト行クリック| Create
-  Create -->|下書き保存| Create
+  List -->|ドラフト行クリック\n下書き編集モード| Create
+  List -->|事前承認NG行クリック\n差し戻し再申請モード| Create
+  Create -->|下書き保存\nbehavior 下書きを保存する| Create
+  Create -->|破棄\nbehavior 下書きを破棄する| List
   Create -->|申請する\nbehavior 出張申請する| List
+  Create -->|再申請\nbehavior 差し戻された申請を再申請する| List
   Create -->|キャンセル| List
 
+  List -->|取消\nbehavior 出張申請を取り消す| List
   List -->|事前承認OK行クリック\n申請者として| Actuals[SCREEN-BT-04\n出張実績登録]
   List -->|事前承認不要行クリック\n申請者として| Actuals
   Actuals -->|実績を登録\nbehavior 出張実績を登録する| List
@@ -50,14 +54,25 @@ flowchart TD
 ```mermaid
 flowchart LR
   Draft[出張申請ドラフト] -->|"出張申請する\n(SCREEN-BT-03)"| Submitted[申請済み出張申請]
+  Draft -->|"下書きを破棄する\n(SCREEN-BT-03)"| Discarded([破棄・削除])
   Submitted -->|"事前承認が必要か判断する\n(サーバ自動実行)"| PreReq[事前承認必要な出張申請]
   Submitted -->|"事前承認が必要か判断する\n(サーバ自動実行)"| PreNoReq[事前承認不要な出張申請]
   PreReq -->|"上長が事前承認する\n(SCREEN-BT-02)"| PreOK[事前承認OK]
   PreReq -->|"上長が事前承認する\n(SCREEN-BT-02)"| PreNG[事前承認NG]
+  PreNG -->|"差し戻された申請を再申請する\n(SCREEN-BT-03)"| Submitted
   PreOK -->|"出張実績を登録する\n(SCREEN-BT-04)"| Actuals[出張実績]
   PreNoReq -->|"出張実績を登録する\n(SCREEN-BT-04)"| Actuals
   Actuals -->|"最終承認する\n(SCREEN-BT-05)"| Final[最終承認]
+
+  Submitted -.->|"出張申請を取り消す\n(SCREEN-BT-01)"| Cancelled[取消済出張申請]
+  PreReq -.->|取り消す| Cancelled
+  PreNoReq -.->|取り消す| Cancelled
+  PreOK -.->|取り消す| Cancelled
+  PreNG -.->|取り消す| Cancelled
+  Actuals -.->|取り消す| Cancelled
 ```
+
+取消（点線）は申請済み〜出張実績（'10'〜'40'）から可能。ドラフト（'00'）は取消でなく破棄、最終承認済み（'50'）以降は取消不可。
 
 ## 遷移詳細
 
@@ -66,9 +81,14 @@ flowchart LR
 | 遷移元 | 遷移先 | トリガ | 対応する behavior | 備考 |
 | ------ | ------ | ------ | ----------------- | ---- |
 | [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | [SCREEN-BT-03](SCREEN-BT-03-business-trip-create.md) | 新規申請ボタン onClick | − | 新規作成モード |
-| [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | [SCREEN-BT-03](SCREEN-BT-03-business-trip-create.md) | ドラフト行クリック | − | 編集モード。申請IDをパスパラメータで渡す |
+| [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | [SCREEN-BT-03](SCREEN-BT-03-business-trip-create.md) | ドラフト（'00'）行クリック | − | 下書き編集モード。申請IDをパスパラメータで渡す |
+| [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | [SCREEN-BT-03](SCREEN-BT-03-business-trip-create.md) | 事前承認NG（差し戻し, '31'）行クリック（申請者本人） | − | 差し戻し再申請モード。申請IDをパスパラメータで渡す |
+| [SCREEN-BT-03](SCREEN-BT-03-business-trip-create.md) | [SCREEN-BT-03](SCREEN-BT-03-business-trip-create.md) | 下書き保存ボタン onClick（成功時） | `behavior 下書きを保存する` | 本画面に留まり保存完了トースト |
+| [SCREEN-BT-03](SCREEN-BT-03-business-trip-create.md) | [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | 破棄ボタン onClick + 確認確定（成功時） | `behavior 下書きを破棄する` | 破棄完了トースト。下書き編集モードのみ |
 | [SCREEN-BT-03](SCREEN-BT-03-business-trip-create.md) | [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | 申請するボタン onClick（成功時） | `behavior 出張申請する` | 申請完了トースト |
+| [SCREEN-BT-03](SCREEN-BT-03-business-trip-create.md) | [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | 再申請ボタン onClick（成功時） | `behavior 差し戻された申請を再申請する` | 再申請完了トースト。差し戻し再申請モードのみ |
 | [SCREEN-BT-03](SCREEN-BT-03-business-trip-create.md) | [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | キャンセルボタン onClick | − | |
+| [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | 取消ボタン onClick + 確認確定（成功時） | `behavior 出張申請を取り消す` | 取消完了トースト・一覧再読込。'10'〜'40' の行のみ |
 | [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | [SCREEN-BT-04](SCREEN-BT-04-business-trip-actuals.md) | 事前承認OK / 事前承認不要行クリック（申請者） | − | 申請IDをパスパラメータで渡す |
 | [SCREEN-BT-04](SCREEN-BT-04-business-trip-actuals.md) | [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | 実績を登録ボタン onClick（成功時） | `behavior 出張実績を登録する` | 登録完了トースト |
 | [SCREEN-BT-04](SCREEN-BT-04-business-trip-actuals.md) | [SCREEN-BT-01](SCREEN-BT-01-business-trip-list.md) | 戻るボタン onClick | − | |
