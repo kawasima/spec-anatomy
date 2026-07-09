@@ -5,5 +5,11 @@ dist/
 __pycache__/
 *.py[cod]
 
+# Gradle
+.gradle/
+build/
+*.iml
+.idea/
+
 # Nablarch開発標準の空テンプレート（CC BY-SA 4.0）は同梱せず build 時に取得する
 examples/business-trip/traditional-design/_templates/

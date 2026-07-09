@@ -1,245 +1,139 @@
-# Living Documentation視点から見た仕様駆動開発
+# 現代の仕様駆動開発の理解
 
-Martraireの本で一貫している核は、ドキュメントを「別に書いて保守するもの」ではなく、コード・テスト・実行時情報・会話・意思決定ログなど、すでに存在する信頼できる知識源から取り出し、必要な読者に届ける仕組みとして捉える点です。信頼できる知識源、単一ソースからの公開、整合性チェック、動的キュレーション、自動生成、実行時ドキュメント、リファクタリング可能性、会話の重視、設計へのフィードバック、レガシーへの外部アノテーションなどが、その骨格です。
+Spec-Driven Development（SDD、仕様駆動開発）は、2025年に名前のついたプラクティスとして広がった。コーディングエージェントに良いコードを出させるには、実装前に「何を・なぜ作るか」を仕様として書いて渡すべきだ、という考え方である。Thoughtworksは SDD を[「よく練られたソフトウェア要求仕様をプロンプトとして使い、AIコーディングエージェントの助けを借りて実行可能なコードを生成するパラダイム」](https://www.thoughtworks.com/en-us/insights/blog/agile-engineering-practices/spec-driven-development-unpacking-2025-new-engineering-practices)と定義する。Microsoftの整理では、[ガードレール・要件・制約・受け入れ基準・エッジケースを事前に定義し、その共有コンテキストからAIがコード・テスト・成果物を生成する spec-first のアプローチ](https://developer.microsoft.com/blog/spec-driven-development-ai-native-engineering)だとされる。
 
-生成AI時代には、この骨格の上に「AIエージェントが読む・実装する・検証する」という用途が加わる。これが一番大きい変化です。
+このドキュメントは、2024年から2026年にかけて出た論文・記事・ツールを論点ごとに整理したものである。現代のSDDが何を主張し、どこで意見が分かれているかを把握するために置く。末尾に出典を一覧する。
 
-## ドキュメントの読者にAIエージェントが加わる
+## なぜ今SDDなのか
 
-従来のLiving Documentationでは、主な読者は人間でした。開発者、ドメインエキスパート、運用担当、監査担当、マネージャなどです。だから、シナリオ、用語集、図、README、ADR、実行時レポートが「人間が理解するための媒体」として語られていました。
+背景にあるのはコストの変化である。コード生成のコストが大きく下がり、作業の中心が「コードを書くこと」から「意図を言語化すること」に移った。[ASDLCフレームワークはこれを「Intent Debt（意図の負債）」と呼び](https://asdlc.io/patterns/the-spec/)、意図を明示しないまま生成を進めると、エージェントがコメントやコミットメッセージから意図を逆算し、ハルシネーションとアーキテクチャドリフトを招くとする。SDDは、要件分析・設計・アーキテクチャ制約・人間によるガバナンスを再導入することで、いわゆる vibe coding の弱点を補うものだと[Thoughtworksは位置づける](https://www.thoughtworks.com/en-us/insights/blog/agile-engineering-practices/spec-driven-development-unpacking-2025-new-engineering-practices)。
 
-生成AI時代には、読者にAIエージェントが加わります。
+もっとも強い主張をしているのが、取引コスト経済学でSDDを基礎づけた[2026年5月の論文](https://arxiv.org/pdf/2605.01160)である。この論文の中心的な主張は、AI支援ソフトウェアの信頼性を決めるのは、基盤となるAIモデルの能力ではなく仕様の規律だ、というものである。モデルを大きくするより仕様を厳密にするほうが効果が大きい、という立場だ。同論文は非決定的なコード生成を「高い資産特殊性と行動的不確実性」を持つ取引ととらえ、決定論的な仕様を契約的ガバナンスの仕組みとして扱う。
 
-これは地味ですが大きい。AIはコードを書く前に、何を作るべきか、何を変えてはいけないか、どの設計原則に従うべきか、どの振る舞いを保証すべきかを必要とします。つまりLiving Documentationは、人間の理解を助けるだけでなく、AIの作業を拘束するコンテキストになります。
+ただし証拠は一致していない。同論文自身が、対照実験では20〜56%の生産性向上が報告される一方、[METRのランダム化比較試験](https://arxiv.org/pdf/2605.01160)では熟練OSS開発者16名がAIツールで19%遅くなった（本人たちは24%速くなると予想していた）ことを引いている。1万人超のテレメトリでは、マージされたPRが98%増える一方でレビュー時間が91%伸び、デリバリ指標は横ばいだった。SDDが効くという主張は、こうした相反する観測を踏まえて慎重に読む必要がある。
 
-[Kiro系の文脈では、仕様は「version controlled, human-readable super prompt」と捉えられています](https://kiro.dev/blog/kiro-and-the-future-of-software-development/)。また、[Spec Kit系では仕様を「静的な文書ではなく、プロジェクトと共に進化する生きた実行可能な成果物」と捉え直しています](https://codezine.jp/article/detail/23908)。これはかなりLiving Documentationそのものに近い発想です。
+## 3つの成熟度: spec-first / spec-anchored / spec-as-source
 
-なので、生成AI時代のLiving Documentationはこう変わると思います。
+現代SDDを理解する中心にあるのは、Birgitta Böckelerが2025年10月に示した[3段階の成熟度分類](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html)である。
 
-- 人間向け: 理解・合意・オンボーディング・監査のための知識
-- AI向け: 実装・変更・レビュー・自己修正のためのコンテキスト
-- 両者共通: 変更され続けるシステムの意図を、信頼できる形で保つ仕組み
+| 段階 | 仕様の扱い |
+| --- | --- |
+| spec-first | 開発前に仕様を書く。実装後は保守されない |
+| spec-anchored | 仕様が機能とともに残り、進化し続ける |
+| spec-as-source | 仕様が主要成果物。人間は生成コードを編集しない |
 
-これまでは「ドキュメントを読めばわかる」が目標でした。これからは「ドキュメントを渡せば、AIが間違いにくくなる」まで含まれます。
+この三分類は、[2026年1月のPiskalaのarXiv論文](https://arxiv.org/html/2602.00180v1)でも Spec-First / Spec-Anchored / Spec-as-Source として形式化されており、最上位では仕様が人間の編集する唯一の成果物で、コードは完全な生成物とされる。Piskalaはコードと仕様の従来の関係を反転させ、仕様を一次成果物、コードを下流の実装詳細と位置づける。Living Documentationは spec-anchored のアプローチ、つまりBDDシナリオを毎コミット実行して仕様とコードの乖離を検出するような仕組みで達成される、というのがPiskalaの整理である。
 
-## 仕様が「説明」から「操作対象」に変わる
+Böckelerが調べた3ツールは別々の段階に位置する。[Kiro は spec-first のみ、GitHubの spec-kit は spec-anchored を志向するが実態は spec-first、Tessl だけが spec-anchored と spec-as-source を明示的に追求していた](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html)。Tesslの spec-as-source は、1つの仕様を1つのコードファイルに対応させ、`@generate` や `@test` のタグで生成し、出力に `GENERATED FROM SPEC - DO NOT EDIT` を書き込む方式だった。
 
-本書のBDD章では、シナリオがビジネスの振る舞いを説明し、同時に自動テストとしてコードとの整合性を保つ例が出てきます。ここでは、シナリオとコードは冗長ですが、テストがその冗長性をチェックするため、信頼できるLiving Documentationになります。
+Böckelerはここに警告を加えている。spec-as-source は、モデル駆動開発（MDD）の硬直性とLLMの非決定性を併せ持つ危険がある。MDDが現実の複雑さに対してモデルが硬すぎたために一度失敗した歴史を、繰り返しかねないという指摘だ。なお[specdriven.comのランドスケープ記事](https://specdriven.com/landscape/)はこの三分類をMartin Fowlerに帰属させているが、原典はFowlerのサイトに掲載されたBöckelerの記事であり、分類の主はBöckelerである。
 
-生成AI時代には、この関係がさらに進みます。
+## Source of Truth はどこにあるか
 
-仕様は、単に「コードが何をしているかを説明するもの」ではなく、「コードを生成・変更するための入力」になります。[Spec-Driven Developmentの整理では、次の3段階があります](https://arxiv.org/abs/2602.00180)。
+3段階の分類が生む最大の争点は、Source of Truth（SoT）をどこに置くかである。[Thoughtworksはこれを未決着の論争として明示している](https://www.thoughtworks.com/en-us/insights/blog/agile-engineering-practices/spec-driven-development-unpacking-2025-new-engineering-practices)。仕様が保守すべき唯一の成果物になるのか、それとも実行可能なコードが依然としてSoTであり続けるのか。この対立は spec-first と spec-as-source の対立とほぼ重なる。
 
-| 形 | 仕様の扱い | Living Documentationとの関係 |
+技術仕様から生成したコードは、平文の要件から生成したコードより品質が高い、という観察は複数のソースで一致している（[Thoughtworks](https://www.thoughtworks.com/en-us/insights/blog/agile-engineering-practices/spec-driven-development-unpacking-2025-new-engineering-practices)）。半構造化された入力や構造化出力の強制がLLMの推論を改善しハルシネーションを減らす、という[別のThoughtworks記事](https://thoughtworks.medium.com/spec-driven-development-d85995a81387)の指摘も同じ方向である。だからといって仕様をSoTに固定できるかは別問題で、ここが論争の中心になっている。
+
+spec-anchored 側の具体策として出てきたのが「living specs（生きた仕様）」である。[Augment Codeは、静的な仕様は情報が一方向にしか流れない（開発者が書き、エージェントが読み、仕様は放置される）ためドリフトが再生成のたびに積み重なると指摘し](https://www.augmentcode.com/guides/living-specs-for-ai-agent-development)、実装判断を仕様に書き戻す双方向のワークフロー（Intent / Implementation / Update / Refinement）を提案する。マルチエージェント開発では、仕様は単なるドキュメントではなく、要件と制約を保持する調整インフラとして機能するという。[ASDLCも同様に、仕様をリポジトリに置く一級の開発成果物とし](https://asdlc.io/patterns/the-spec/)、仕様（現在の状態を記述）とPBI（変更差分を記述）を役割分担させて、将来のエージェントが持続的なアーキテクチャルールを参照できるようにする。
+
+## spec-first への批判: Waterfall回帰とスケール破綻
+
+現代SDDには一貫した批判がある。論点は「ウォーターフォールへの回帰」「仕様ドリフト」「大規模・既存コードでの破綻」の3つである。
+
+もっとも直接的なのがMarmelabの[「The Waterfall Strikes Back」](https://marmelab.com/blog/2025/11/12/spec-driven-development-waterfall-strikes-back.html)である。著者はSDDが既存の大規模コードベースではほとんど使えないとし、開発者を工程から排除しようとするウォーターフォールへの回帰だと論じる。SDDエージェントはコンテキスト認識を欠き、更新すべき既存コードを見落とす。代替として、形式的な spec-first ワークフローに従わない反復的なアプローチ「Natural Language Development」を提案している。
+
+より構造的な批判が[Arcturus Labsの「Why spec-driven development breaks at scale」](http://arcturus-labs.com/blog/2025/10/17/why-spec-driven-development-breaks-at-scale-and-how-to-fix-it/)にある。現行の主流SDDは仕様を使い捨てにしている（コード変更の前に書き、実装が終われば捨てる）。そして大きな自然言語仕様はスケールで破綻する。自然言語は本質的に曖昧で、仕様を完全に曖昧さのない状態まで詳細化すると、それはコードと等価になり、仕様である利点を失う。著者の提案は、一発の仕様→コード生成ではなく開発者とエージェントの対話的な明確化を行うこと、モノリシックな仕様ではなく階層的にリンクした文書（グローバル仕様がサブ仕様にリンクする）にすること、そしてコード変更が仕様更新を駆動する living document にして、コードが仕様と食い違うたびに同じPRでグローバル仕様を編集することである。
+
+[sudoishの「The Spec-Driven Development Waterfall Trap」](https://sudoish.com/spec-driven-development-waterfall-trap/)も同じ問題を指摘する。SDDは本来反復的・アジャイルであるべきだが、ワークフローのガードレールと十分なツールがなければ、既定でウォーターフォール的な big-design-upfront に退行する。加えてAI生成の仕様は信頼性の問題を抱える。出力は権威ありげに見えるが真に推論されたものではなく、AIが反論されると、自分が最初から持っていなかった立場と辻褄を合わせようとしてハルシネーションのリスクが上がる。
+
+さらに歴史的な後退を指摘するのが[specdriven.comのランドスケープ整理](https://specdriven.com/landscape/)である。2026年初頭時点の主要ツール（Kiro / GitHub Spec Kit / OpenSpec / BMAD / IntentSpec）はいずれも非実行のMarkdown散文を仕様形式としており、BDD時代（FIT / Cucumber / RSpec）が達成していた実行可能仕様から後退している、という整理である。実際、[Specification by Example を使ってAIを駆動する実験](https://urgo.medium.com/using-specification-by-example-to-drive-ai-95c19f0bb4ec)では、Gherkin/実行可能仕様はアドホックなプロンプトより検証可能だが、AIはテストが正しい理由で落ちたかを判別しにくく、シナリオが複雑化するとBDDのグルーコード品質が劣化した。実行可能仕様への回帰も、それ自体が万能ではない。
+
+## 機械可読仕様とLiving Documentation
+
+「AIが読むためのドキュメント」という論点は、Cyrille Martraireの Living Documentation（2019）にさかのぼる。[InfoQの書評](https://www.infoq.com/articles/book-review-living-documentation/)がまとめる核は、ドキュメントを対象そのもの（コード要素へのアノテーションなど）に置いて実装と同期させること、ドメイン知識はコード・テスト・実行時の挙動にすでに潜在しており、手作業の転記ではなく自動抽出で表面化させること、である。これが機械可読／AI可読な仕様の起点にあたる。
+
+この考え方はLLM時代に不要になるどころか、重要性が増す。[Thoughtworksは、自然言語を扱えるモデルが登場しても機械可読仕様は依然として本質的だと述べ](https://thoughtworks.medium.com/spec-driven-development-d85995a81387)、半構造化された入力プロンプトや構造化出力の強制が推論性能を大きく改善しハルシネーションを減らすとする。ツール（Amazon Kiro、GitHub Spec Kit）は定義済みのSDDワークフローを提供し、コーディングエージェントは `AGENTS.md` をシステムプロンプトとして使う。
+
+ただし、仕様を詳細にすればするほど良いわけではない。[Addy Osmaniは、GitHubが2,500以上のエージェント設定ファイルを分析して抽出した仕様の6要素](https://addyosmani.com/blog/good-spec/)（コマンド、テストのフレームワークとカバレッジ、プロジェクト構造、コードスタイルの例、gitワークフロー、境界＝Always / Ask First / Never の3層）を紹介しつつ、指示を詰め込むほどモデルの追従性が劣化する「curse of instructions」を指摘する。だから仕様はモジュラーに保ち、エージェントには一度に一つの焦点を絞ったタスクを渡す。高レベルの簡潔な仕様から始め、AIにそれを詳細な計画へ展開させるのがよく、最初から完全な計画を作り込むのは過剰だ、という。
+
+## 検証: 相関エラーと決定論的ゲート
+
+生成が安くなるほど、もっともらしいが間違った仕様・実装・テストが増える。だから検証の重要性はむしろ上がる。[Thoughtworksは、SDDにおいても仕様ドリフトとハルシネーションは本質的に避けがたく、決定論的なCI/CDプラクティスが依然として必要だと明言している](https://www.thoughtworks.com/en-us/insights/blog/agile-engineering-practices/spec-driven-development-unpacking-2025-new-engineering-practices)。
+
+学術側はこの検証を主題にし始めている。SANER 2026に採択された[CURRANTE（registered report）](https://arxiv.org/html/2601.03878v1)は、LLMのコード生成を Specification → Tests → Function の3段に構造化するVS Codeプラグインで、仕様とテストの精緻化に人間が介入することが生成コードの品質とダイナミクスに影響するかを実証的に調べる。要件・仕様のエンジニアリングに労力を投じるのと、コードの精緻化に投じるのとのトレードオフを明らかにする設計である。
+
+形式検証と組み合わせる方向もある。[2024年11月のspec2code](https://arxiv.org/abs/2411.13269)は、形式仕様（ACSL）と自然言語仕様をLLMに与えて組込み自動車ソフトを生成し、安全クリティカル領域向けに形式検証を統合する。反復的なbackpromptとfine-tuningによる精緻化を前提とし、重量車メーカーScaniaの3つの産業事例で検証されている。
+
+検証を仕様の中核に据えたのが前掲のTDAD論文である。[TDAD（Test-Driven AI Agent Definition）パイプラインは、行動仕様を実行可能なテストスイートにコンパイルし、AI生成のエージェントプロンプトの受け入れ基準として使う](https://arxiv.org/pdf/2605.01160)。4ドメインで86〜100%のミューテーションスコアを達成したという。
+
+検証設計でとくに危ういのは、実装とテストを同じ仕様から同時に生成させるケースである。仕様を同じ方向に誤解すると、実装もテストも同じバグを共有する。この相関エラーへの対策として、人間が定義した具体的な入出力の受け入れテストを併用すること、テストの源泉を実装と異なる入力（外部契約・画面モックなど）に置くことが、実務側の記事でも繰り返し推奨されている。
+
+## ツールの現状
+
+学術的なサーベイもツール群の整理に入っている。[2026年6月の論文](https://arxiv.org/pdf/2606.04967)は、AI開発フレームワークを specification / context / roles / execution / validation / portability の6次元で分類し、6次元すべてを強くカバーするフレームワークは存在せず、プロセスの深さと（エージェント間の）可搬性のあいだにトレードオフがあることを実証的に見出した。GitHub APIで「1000スター以上かつ直近6ヶ月にpushあり」というトラクションフィルタをかけて選んだ6フレームワークは、GitHub Spec Kit（106,786スター）、Get Shit Done（63,754）、OpenSpec（51,404）、BMAD Method（48,209）、Spec Kitty（1,273）、Reversa（1,100）である。Reversaは、既存のレガシーシステムから運用仕様を復元する reverse documentation engineering によって、通常のグリーンフィールドSDDの向きを反転させる。
+
+主要ツールを整理すると次のようになる。
+
+| ツール | 提供元・形式 | ワークフロー / 位置づけ |
 | --- | --- | --- |
-| Spec-first | 実装前のガイド | Planモードに近い。実装後に捨てられるならLivingではない |
-| Spec-anchored | 実装後も保守される基準点 | 本書のBDDやLiving Documentationに最も近い |
-| Spec-as-source | 仕様が主要成果物で、コードは生成物 | Living Documentationが実装の上位ソースになる |
+| [GitHub Spec Kit](https://github.com/github/spec-kit) | GitHub/Microsoft、MITライセンスのMarkdownテンプレート、2025年9月 | constitution → specify → clarify → plan → tasks → implement。各フェーズがMarkdown成果物を生成。エージェント非依存で30以上のコーディングエージェントに対応、106K★、105のコミュニティ拡張。仕様をバージョン管理された使い捨てでない source of truth として扱う |
+| [Kiro](https://kiro.dev/blog/introducing-kiro/) | AWS、EARS記法を用いるMarkdown、2025年7月 | Requirements → Design → Tasks。要求はEARS（Easy Approach to Requirements Syntax）記法のユーザーストーリー、設計はコードベース解析からデータフロー図・TypeScript interface・DBスキーマ・APIを生成。ファイル保存等をトリガーにする agent hooks |
+| OpenSpec | Fission AI、Markdown+YAML、ブラウンフィールド向け | 仕様を凍結ではなく可変（mutable）として扱う |
+| BMAD-METHOD | コミュニティ、複数成果物のMarkdown | 仕様・計画・タスクリストを生成してエージェントを駆動 |
+| Tessl | 2025年9月に Tessl Framework と Spec Registry で参入 | spec-as-source を追求した唯一のツールだったが、2026年1月にエージェントスキルへ方針を変え、Spec RegistryをTessl Registryに改称してSDDカテゴリから撤退 |
 
-ここで重要なのは、Spec-firstだけなら従来の「事前設計」に近いという点です。生成AIが計画を作り、実装前に人間が確認する。これは便利ですが、仕様がその後腐るならLiving Documentationではありません。
+Spec Kitのワークフローは、仕様を「実装を導くもの」から「実装を直接生成する実行可能な成果物」へ捉え直す点に特徴がある（[公式ガイド](https://github.github.com/spec-kit/)）。「何を・なぜ（仕様）」と「どう（技術計画・技術スタック）」を分離し、specifyフェーズでは技術スタックの詳細を意図的に除く。一発生成ではなく多段の反復的な精緻化を選ぶ。
 
-本当に変化が起きるのはSpec-anchored以降です。仕様が実装後も残り、AIが次の変更時にもそれを読む。さらにテストや型やコントラクトで実装との乖離を検出する。ここまで行くと、仕様は「ドキュメント」ではなく、開発プロセスの制御面になります。
+Tesslの撤退（2025年9月参入、2026年1月にSDDカテゴリから離脱、[specdriven.com](https://specdriven.com/landscape/)）は、spec-as-source の商業的な難しさを示す事例である。
 
-## 「仕様を更新するのが一番速い」ならLiving Documentationは生き残る
+## 次に問うべきこと
 
-Living Documentationが失敗する典型は、仕様を更新するよりコードを直接直すほうが速いことです。すると仕様は後回しになり、腐ります。
+ここまでが調査で得た現代SDDの整理である。論点は出ている。SoTを仕様とコードのどちらに置くか、spec-first をどこまで許すか、機械可読仕様と自然言語仕様をどう配分するか、検証をどの層に置くか。次は、これらの論点に対して自分の立場を書き入れ、ドメイン記述ミニ言語やユビキタス言語の議論（[ubiquitous_language.md](./ubiquitous_language.md) 参照）とどう接続するかを考えていく。
 
-生成AIはここを変えます。
+## 出典一覧
 
-仕様モデルを更新し、それをAIに渡して実装・テスト・影響分析まで進めるほうが、コードを手で探索して修正するより速い場面が増える。そうなると、仕様を最新に保つことが「義務」ではなく「最短経路」になります。あなたの「仕様モデルを使って生成AIに実装モデルを作ってもらう」の章でも、この経済性の逆転が明示されています。仕様モデルからAIが実装コードを作り、テストコードや制約検証で乖離を検知する構造です。
+### 学術論文（arXiv / 査読）
 
-これはLiving Documentationにとってかなり大きい。
+- [spec2code: 形式仕様（ACSL）と自然言語仕様からの組込み自動車ソフト生成、形式検証と統合、Scania事例](https://arxiv.org/abs/2411.13269)（2024-11）
+- [Piskala: SDDの3段階形式化（Spec-First / Spec-Anchored / Spec-as-Source）](https://arxiv.org/html/2602.00180v1)（2026-01）
+- [CURRANTE: LLMコード生成を Specification→Tests→Function に構造化するVS Codeプラグイン、SANER 2026](https://arxiv.org/html/2601.03878v1)（2026-01）
+- [AI開発フレームワークの6次元プロセス分類とトラクションフィルタによる6フレームワーク比較](https://arxiv.org/pdf/2606.04967)（2026-06）
+- [TDAD: 取引コスト経済学によるSDDの基礎づけ、「決めるのは仕様の規律でありモデル能力ではない」](https://arxiv.org/pdf/2605.01160)（2026-05）
 
-従来:
+### ツール公式・一次資料
 
-```
-仕様書を更新する = 面倒な追加作業
-```
+- [GitHub Spec Kit（リポジトリ）](https://github.com/github/spec-kit) / [公式ガイド](https://github.github.com/spec-kit/)（2025-09、MIT）
+- [Kiro（AWS）introducing-kiro](https://kiro.dev/blog/introducing-kiro/)（2025-07）
 
-生成AI時代:
+### 方法論・著名エンジニアのブログ
 
-```
-仕様モデルを更新する = AIに正しく作業させるための最短入力
-```
+- [Birgitta Böckeler「Understanding Spec-Driven Development（3ツール）」— 3成熟度分類の原典](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html)（2025-10）
+- [Addy Osmani「What makes a good spec?」— 仕様の6要素、curse of instructions](https://addyosmani.com/blog/good-spec/)（2026-01）
+- [Microsoft Dev Blog「Spec-Driven Development: AI-Native Engineering」— 7ステップ、translation loss](https://developer.microsoft.com/blog/spec-driven-development-ai-native-engineering)（2026-06）
+- [Thoughtworks「Spec-Driven Development: unpacking 2025's new practice」— SoT論争、決定論ゲート](https://www.thoughtworks.com/en-us/insights/blog/agile-engineering-practices/spec-driven-development-unpacking-2025-new-engineering-practices)（2025-12）
+- [Thoughtworks（Medium）「Spec-Driven Development」— 機械可読仕様の必要性、AGENTS.md](https://thoughtworks.medium.com/spec-driven-development-d85995a81387)（2025-12）
+- [ASDLC「The Spec」— living spec、context amnesia、Intent Debt](https://asdlc.io/patterns/the-spec/)（2026-04）
+- [Augment Code「Living Specs for AI Agent Development」— 双方向ワークフロー、仕様ドリフト](https://www.augmentcode.com/guides/living-specs-for-ai-agent-development)（2026-03）
 
-この逆転が起きた領域では、Living Documentationはかなり強くなります。逆に、この逆転が起きない領域では、従来通り腐ります。
+### Living Documentation
 
-## 「人間にわかる」だけでは足りず、「機械が使える」必要が出る
+- [InfoQ「Book Review: Living Documentation」（Cyrille Martraire）— 機械可読/AI可読仕様の起点](https://www.infoq.com/articles/book-review-living-documentation/)（2019）
 
-本書はもともと、コード上のアノテーション、タグ、命名規則、構造化コメント、DSL、メタデータなどを重視しています。理由は、機械的に抽出・検証・キュレーションできるからです。
+### 批判・限界論
 
-生成AI時代には、この価値がさらに上がります。
+- [Marmelab「The Waterfall Strikes Back」— 既存大規模コードで破綻、Natural Language Development](https://marmelab.com/blog/2025/11/12/spec-driven-development-waterfall-strikes-back.html)（2025-11）
+- [Arcturus Labs「Why SDD breaks at scale and how to fix it」— 階層的リンク仕様、living document](http://arcturus-labs.com/blog/2025/10/17/why-spec-driven-development-breaks-at-scale-and-how-to-fix-it/)（2025-10）
+- [sudoish「The Spec-Driven Development Waterfall Trap」— BDUF退行、AI仕様の信頼性問題](https://sudoish.com/spec-driven-development-waterfall-trap/)（2026-04）
+- [urgo「Using Specification by Example to drive AI」— Gherkinでの実験、BDDグルーコードの劣化](https://urgo.medium.com/using-specification-by-example-to-drive-ai-95c19f0bb4ec)（2025-11）
 
-自然言語の長いドキュメントもAIは読めますが、長ければ良いわけではありません。コンテキストが増えすぎると、重要情報が埋もれます。[CodeZineの記事でも、Context RotやLost in the Middleに触れ、仕様を詳細にすればするほどよいわけではなく、テスト・lint・CIなどの決定論的ゲートと組み合わせる必要があるとしています](https://codezine.jp/article/detail/23908)。
+### ランドスケープ整理
 
-生成AI時代のLiving Documentationには、短く局所的で参照しやすいこと、変更差分が追跡できること、コード・テスト・型・設定・ADRと対応づけられること、AIがタスクに必要な部分だけ取得できること、自然言語だけでなく構造化された仕様・制約・例・テストを含むこと、そして「なぜそうするか」を含むことが、これまで以上に求められます。
+- [specdriven.com「SDD Landscape」— 非実行Markdownへの後退、ツール系譜、Tessl撤退](https://specdriven.com/landscape/)（2026）
 
-とくに「なぜ」は重要です。本書でも意思決定の根拠、設計意図、ADR、アーキテクチャの原則が重視されています。AIにとっても、Whyがないと、動くが意図を失ったコードを作りがちです。あなたの章でも、仕様モデルの「理由」列をAIに与えることで、単なるif文ではなく、業務概念を型として表現しやすくなると整理されています。
+### 補足: 検証で否認された主張
 
-## Living Documentationは「Harness」になる
+以下は情報源自体は有効だが、特定の数値・帰属が敵対的検証（3票制）で否認されたため、本文では採用していない。
 
-Birgitta BöckelerのHarness Engineeringの整理は、Living Documentationの生成AI版としてかなり重要です。[coding agentに対して、外側のharnessは2つの役割を持ちます。ひとつは最初から正しくやらせるfeedforward、もうひとつは問題を見つけて自己修正させるfeedbackです](https://martinfowler.com/articles/harness-engineering.html)。
-
-これをLiving Documentationに重ねると、かなりきれいに整理できます。
-
-| Living Documentationの要素 | guide / sensor | 具体的成果物 | AIワークフロー上の使い方 |
-| --- | --- | --- | --- |
-| BDDシナリオ | guide + sensor | `.feature`、step definition、受け入れテスト | 実装前に読ませ、実装後にCIで通す |
-| API仕様 | guide + sensor | `openapi.yaml`、mock、contract test | API境界を固定し、互換性を検査する |
-| ADR | guide | `docs/adr/*.md`、`AGENTS.md`要約 | 設計判断の前提として読ませる |
-| 設計原則 | guide + sensor | `architecture-principles.md`、ArchUnit | 原則を読み、違反をCIで落とす |
-| 用語集 | guide | `domain-glossary.md`、型定義 | 命名とモデル化の語彙を揃える |
-| アノテーション | guide + sensor | `@CoreConcept`、`@LegacyReadModel` | 抽出・検索・変更禁止・レポート生成に使う |
-| 実行時ログ | sensor | trace、structured log、SLO report | 実行時の劣化や副作用を検出する |
-| 型・lint・テスト | sensor | typecheck、lint、unit/property tests | AI出力を人間レビュー前に落とす |
-| AIレビュー | sensor | review report、PR comment | 意味的な違和感を補助的に拾う |
-
-本書では、生きた用語集、生きた図、ランタイムドキュメント、実行時トレースからのサービス図、アーキテクチャ規範、強制的なガイドラインが出てきます。これらは、生成AI時代には「AIが安全に作業するための制御系」として再解釈できます。
-
-つまり、Living Documentationは「読むための文書群」から「エージェントを制御するharness」へ広がる。
-
-これはかなり本質的な変化です。
-
-## ただし、検証の重要性はむしろ増える
-
-生成AIが入ると、ドキュメント生成もコード生成も安くなります。だから一見すると、Living Documentationはもっと簡単になるように見えます。
-
-でも危険もあります。AIは、もっともらしいが間違った説明やテストや仕様を作れます。だから「生成できる」ことは「信頼できる」ことではありません。
-
-本書のLiving Documentationは、もともと「信頼できる知識源」と「整合性チェック」を重視しています。知識が複数箇所に冗長に存在するなら、自動テストなどで同期を検証せよ、という考えです。生成AI時代には、この原則がさらに重要になります。
-
-特に危ないのは、AIに実装とテストを同じ仕様から同時に作らせるケースです。仕様を同じ方向に誤解すると、実装もテストも同じバグを共有します。あなたの章でも、相関エラーへの対策として、人間が定義した具体的な入出力の受け入れテストを併用する必要があると書かれています。
-
-なので、生成AI時代のLiving Documentationは、次のような多層構造になるべきです。
-
-```
-仕様・シナリオ・ADR
-  ↓
-AIによる実装支援
-  ↓
-型検査・lint・構造テスト
-  ↓
-仕様由来のテスト
-  ↓
-人間が選んだ代表例・受け入れテスト
-  ↓
-実行時ログ・トレース・SLO
-  ↓
-継続的なフィードバック
-```
-
-AIが生成した説明を、またAIが読んで納得するだけでは弱い。決定論的なセンサー、実行可能な仕様、実データからのフィードバックが必要です。
-
-## 会話の価値は下がらない。むしろ上がる
-
-本書10章は、ドキュメントより会話を重視します。ドキュメントは目的ではなく、知識共有の手段であり、最も効率的なのは多くの場合、対話・ペア・モブ・スリーアミーゴ・イベントストーミングです。
-
-生成AIが入ると、ここを誤解しやすい。
-
-「AIに仕様を書かせれば、会話はいらない」と考えると失敗します。AIは曖昧な合意を明確にしてくれることはありますが、何を正とするかは決められません。利害、制約、例外、許容する技術的負債、変えてよい仕様、変えてはいけない仕様は、人間の合意事項です。
-
-むしろAI時代には、会話で決まったことを、その場で仕様・ADR・シナリオ・テストに落とすコストが下がります。ここが変化です。
-
-従来:
-
-```
-会話 → 誰かがあとで議事録を書く → 忘れる
-```
-
-生成AI時代:
-
-```
-会話 → AIが仕様案・ADR案・シナリオ案を即時生成 → 人間が確認 → リポジトリに残す
-```
-
-会話の代替ではなく、会話を消えにくくする補助としてAIを使うべきです。
-
-## アーキテクチャドキュメントは「AIに守らせる原則」になる
-
-12章では、アーキテクチャを「プロジェクトの全員が知っておくべきこと」「後で変更が難しい決定」として扱い、問題、品質特性、ステーク、前提、デシジョンログ、アーキテクチャ規範を明示することが重要だとしています。
-
-生成AI時代には、これらは単に人間が読むものではありません。AIがコードを書くときの制約になります。
-
-たとえば、
-
-- この境界を越えて依存してはいけない
-- このデータのゴールデンソースはここ
-- API first
-- ミドルウェアは薄く、エンドポイントを賢くする
-- レガシーには直接依存しない
-- このサブドメインでは値オブジェクト優先
-- この領域ではnull禁止
-
-こういう原則は、従来なら「読んで守ってね」でした。今後は、[AGENTS.md](http://agents.md/)、スキル、lint、ArchUnit、fitness function、CI、AIレビューに落として、AIにも守らせる必要があります。[Harness Engineeringでいうarchitecture fitness harnessです](https://martinfowler.com/articles/harness-engineering.html)。
-
-つまり、アーキテクチャドキュメントは「説明」から「制御」に近づきます。
-
-## レガシーでは、AIは考古学を助けるが、真実を作ってはいけない
-
-14章のレガシー論は、生成AI時代にかなり重要です。レガシーは「知識が化石化していて、鍵を失った状態」とされます。コード、実行中の挙動、古いドキュメント、昔の開発者、スケッチ、外部アノテーション、バブルコンテキスト、重ね合わせ構造などを使って、少しずつ意味を取り戻す必要があります。
-
-AIはここで役に立ちます。
-
-- コード探索の補助
-- 依存関係の要約
-- 古い命名の整理
-- 外部アノテーション案の生成
-- 重ね合わせ構造の仮説づくり
-- 既存挙動からシナリオ案を作る
-- ストラングラー移行計画の分割
-- 破産領域・変更禁止領域の検出支援
-
-ただし、AIは「それっぽい構造」を作るのが得意なので危険でもあります。レガシーに対するAI要約は、仮説であって真実ではありません。実行時観測、テスト、ドメインエキスパートの確認、差分検証で裏取りする必要があります。
-
-レガシー領域では、生成AIは「考古学者の助手」であって、「歴史の証人」ではない。この区別は大事です。
-
-## 変わらないこともある
-
-変わる点を並べましたが、本質的に変わらないものもあります。
-
-### ドキュメントは目的ではない
-
-本書は何度も、ドキュメントは手段であって目的ではないとしています。生成AIでドキュメント生成が安くなると、むしろ不要なドキュメントを大量生産しやすくなります。これは危険です。
-
-AIが作った長い設計書、長いテスト計画、長い要約、長いADR風メモ。読まれず、検証されず、実装ともつながらないなら、それはLiving Documentationではありません。ただの新しいゴミです。
-
-### 重要なのは信頼できる知識源
-
-本書3章の「この知識は今どこにあるのか？」という問いは、AI時代でもそのまま残ります。
-
-むしろ重要度は上がります。AIが答えたから正しい、ではなく、
-
-- その知識はコードにあるのか
-- テストにあるのか
-- 仕様モデルにあるのか
-- ADRにあるのか
-- 実行時ログにあるのか
-- ドメインエキスパートの頭にしかないのか
-- もう失われていて仮説なのか
-
-を区別しないといけません。
-
-### 設計を良くする効果は残る
-
-11章の「ドキュメントを聴く」は、生成AI時代にも強いです。Living Documentationを作ろうとして難しいなら、それは設計の問題かもしれない。用語集が生成できないなら、ドメイン言語がコードに表れていない。図が生成できないなら、構造が曖昧。説明が長すぎるなら、アーキテクチャが複雑すぎる。
-
-AIを入れても、ここはごまかせません。むしろAIは、悪い設計を高速に増幅します。だからLiving Documentationは、AI時代には設計品質のセンサーとしてさらに重要になります。
-
-## 私の見立て
-
-生成AI時代のLiving Documentationは、次のように再定義するとしっくり来ます。
-
-```
-Living Documentationとは、
-人間とAIエージェントが同じ意図に基づいて変更できるように、
-信頼できる知識源から抽出・構造化・検証され続ける、
-実行可能なコンテキストである。
-```
-
-従来の定義では「知識共有」が中心でした。これからは「知識共有 + エージェント制御 + 継続検証」になります。
-
-実務的には、全部をSpec-as-sourceにする必要はないと思います。多くの現場で現実的なのは、人間の会話で意図を決め、本当に保ちたい振る舞いだけ仕様・シナリオ・例に落とし、それをAIに渡すための短く構造化されたコンテキストにすることです。実装はAIに手伝わせ、型・テスト・契約・lint・アーキテクチャテストで検証する。変更を通じて得た知識はADR・仕様・テストへ戻す。レガシーや曖昧な領域では、仮説と真実を分けて扱う。これくらいが落としどころだと思います。
-
-つまり、Living Documentationは「AIにドキュメントを書かせる話」ではありません。
-
-むしろ逆で、AIが勝手にそれっぽく作る時代だからこそ、何が正で、何が仮説で、何を守るべきかを、コード・仕様・テスト・実行時情報の形で生かし続ける必要がある。ここが一番変わったところだと思います。
+- spec2code論文について「LLMはbackpromptもfine-tuningもなしに仕様のみから形式的に正しいコードを生成できる」という過剰一般化（実際は反復精緻化を前提とする）
+- Piskala論文について「エラー最大50%削減の対照実験」という裏付けの取れない数値
+- specdriven.comの「Martin Fowlerが3パターンに分類」という誤帰属（正しくはBirgitta Böckeler）
