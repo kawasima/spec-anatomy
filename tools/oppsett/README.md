@@ -4,7 +4,7 @@
 
 ## このツールの位置付け
 
-spec-anatomy の Spec Set は、Shell の画面設計を [docs/spec-set/shell/ui/templates/screen.md](../../docs/spec-set/shell/ui/templates/screen.md) のフォーマットで書きます。このフォーマットは「項目テーブル＋画面イベント＋業務的事前条件・事後条件」を中心とした構造化された Markdown ですが、レイアウト図と項目表を手で対応づけるのは認識ズレが起きやすく、SIer 現場のボトルネックでした。
+spec-anatomy の Spec Set は、Shell の画面設計を [reference/spec-set/shell/ui/templates/screen.md](../../reference/spec-set/shell/ui/templates/screen.md) のフォーマットで書きます。このフォーマットは「項目テーブル＋画面イベント＋業務的事前条件・事後条件」を中心とした構造化された Markdown ですが、レイアウト図と項目表を手で対応づけるのは認識ズレが起きやすく、SIer 現場のボトルネックでした。
 
 oppsett はこの工程を支援します。
 
@@ -15,7 +15,7 @@ oppsett はこの工程を支援します。
 
 ## SMDD の Core/Shell との関係
 
-oppsett は **Shell（画面設計）の作業支援ツール**です。Core（仕様モデル）の `data` 定義から派生元を補完するのが理想ですが、現バージョンでは派生元はユーザーが手で入力します。将来的には [docs/examples/business-trip/spec-model/business-trip.md](../../docs/examples/business-trip/spec-model/business-trip.md) のような仕様モデルファイルを読み込んで補完候補を出す機能を加える予定です。
+oppsett は **Shell（画面設計）の作業支援ツール**です。Core（仕様モデル）の `data` 定義から派生元を補完するのが理想ですが、現バージョンでは派生元はユーザーが手で入力します。将来的には [examples/business-trip/spec-model/business-trip.md](../../examples/business-trip/spec-model/business-trip.md) のような仕様モデルファイルを読み込んで補完候補を出す機能を加える予定です。
 
 ## 使い方
 
@@ -51,7 +51,7 @@ python3 -m http.server -d tools/oppsett 8000  # localhost:8000 で起動
 
 ### screen.md
 
-[docs/spec-set/shell/ui/templates/screen.md](../../docs/spec-set/shell/ui/templates/screen.md) のテンプレートに準拠した Markdown を出力します。項目テーブルは次の列を持ちます。
+[reference/spec-set/shell/ui/templates/screen.md](../../reference/spec-set/shell/ui/templates/screen.md) のテンプレートに準拠した Markdown を出力します。項目テーブルは次の列を持ちます。
 
 | No | 項目名 | 種別 | 派生元 | 編集仕様 | 必須 | 初期値 | 表示条件 |
 |----|--------|------|--------|----------|------|--------|----------|
@@ -76,7 +76,7 @@ PNGはバイナリなので Git でも追跡対象にして問題ありません
 
 ## 動作確認
 
-[docs/examples/business-trip/shell/ui/layout/SCREEN-BT-02-pc.html](../../docs/examples/business-trip/shell/ui/layout/SCREEN-BT-02-pc.html) を読み込んで、対応する [SCREEN-BT-02 の screen.md](../../docs/examples/business-trip/shell/ui/business-trip-detail-screen.md) と一致するか確認できます。デザインHTML から screen.md を生成し、既存の screen.md と項目テーブルが一致すれば往復可能性が確認できます。
+[examples/business-trip/shell/ui/layout/SCREEN-BT-02-pc.html](../../examples/business-trip/shell/ui/layout/SCREEN-BT-02-pc.html) を読み込んで、対応する [SCREEN-BT-02 の screen.md](../../examples/business-trip/shell/ui/business-trip-detail-screen.md) と一致するか確認できます。デザインHTML から screen.md を生成し、既存の screen.md と項目テーブルが一致すれば往復可能性が確認できます。
 
 ## 開発
 
@@ -111,6 +111,6 @@ tools/oppsett/
 
 ## 関連ドキュメント
 
-- [docs/spec-set/shell/ui/templates/screen.md](../../docs/spec-set/shell/ui/templates/screen.md): 出力フォーマットの規約
-- [docs/spec-set/shell/ui/README.md](../../docs/spec-set/shell/ui/README.md): UI への変換規約
-- [docs/examples/business-trip/shell/ui/](../../docs/examples/business-trip/shell/ui/): screen.md のサンプル
+- [reference/spec-set/shell/ui/templates/screen.md](../../reference/spec-set/shell/ui/templates/screen.md): 出力フォーマットの規約
+- [reference/spec-set/shell/ui/README.md](../../reference/spec-set/shell/ui/README.md): UI への変換規約
+- [examples/business-trip/shell/ui/](../../examples/business-trip/shell/ui/): screen.md のサンプル

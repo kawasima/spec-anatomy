@@ -27,6 +27,7 @@
   - [refactoring-prompt.md](ai-collaboration/refactoring-prompt.md) — 既存設計書から Core を抽出する例
   - [core-generation-prompt.md](ai-collaboration/core-generation-prompt.md) — Core からコードを生成する例
   - [excel-to-spec-evaluation.md](ai-collaboration/excel-to-spec-evaluation.md) — before の設計書一式から after の仕様モデルへ組み替える過程の記録
+- [exercise/](exercise/) — 「生成AI時代のドキュメンテーション」ハンズオンの演習入力。`requirements.template.md`（設計書一式を `requirements.md` に変換する雛形。根拠/Why と 由来/Traceability の欄で欠落を可視化する）と受講者向け README。答え抜きの配布サブセットは [tools/exercise-dist/](../../tools/exercise-dist/) で組む
 
 ## 使い方
 
